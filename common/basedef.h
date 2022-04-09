@@ -12,7 +12,7 @@
 
 
 #ifndef TAG
-#define TAG "basedef"
+#define TAG "@-->"
 #endif
 
 #define  LOGTAG true
@@ -27,14 +27,17 @@
 	#define GLOGE(...)  __android_log_print(ANDROID_LOG_ERROR,	TAG,  __VA_ARGS__)  //red
 #else
 	//if __linux__
-	#define GLOGD(...) printf("Filename %s, Function %s, Line %d > ", __FILE__, __FUNCTION__, __LINE__); \
-								printf(__VA_ARGS__); \
-								printf("\n");
+	#define GLOGD(...)  printf("Filename %s, Function %s, Line %d %s ", __FILE__, __FUNCTION__, __LINE__, TAG); \
+						printf(__VA_ARGS__); \
+						printf("\n");
 
-	#define GLOGE(...) printf(__VA_ARGS__);
-	#define GLOGI GLOGE
-	#define GLOGW GLOGE
-	#define GLOGV GLOGE
+	#define GLOGB(...)  printf("%s, Line %d %s ", __FILE__, __LINE__, TAG); \
+						printf(__VA_ARGS__); \
+						printf("\n");
+	#define GLOGE GLOGB							
+	#define GLOGI GLOGB
+	#define GLOGW GLOGB
+	#define GLOGV GLOGB
 #endif
 
 #endif

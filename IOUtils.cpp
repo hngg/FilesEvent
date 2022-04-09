@@ -116,13 +116,13 @@ int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
 
 	int listenFd = socket( AF_INET, SOCK_STREAM, 0 );
 	if( listenFd < 0 ) {
-		syslog( LOG_WARNING, "listen failed, errno %d, %s", errno, strerror( errno ) );
+		GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
 		ret = -1;
 	}
 
 	if( 0 == ret && 0 == blocking ) {
 		if( setNonblock( listenFd ) < 0 ) {
-			syslog( LOG_WARNING, "failed to set socket to non-blocking" );
+			GLOGE( "failed to set socket to non-blocking" );
 			ret = -1;
 		}
 	}
@@ -130,11 +130,11 @@ int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
 	if( 0 == ret ) {
 		int flags = 1;
 		if( setsockopt( listenFd, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof( flags ) ) < 0 ) {
-			syslog( LOG_WARNING, "failed to set setsock to reuseaddr" );
+			GLOGE( "failed to set setsock to reuseaddr" );
 			ret = -1;
 		}
 		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags) ) < 0 ) {
-			syslog( LOG_WARNING, "failed to set socket to nodelay" );
+			GLOGE( "failed to set socket to nodelay" );
 			ret = -1;
 		}
 	}
@@ -149,7 +149,7 @@ int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
 		addr.sin_addr.s_addr = INADDR_ANY;
 		if( '\0' != *ip ) {
 			if( 0 != inet_aton( ip, &addr.sin_addr ) ) {
-				syslog( LOG_WARNING, "failed to convert %s to inet_addr", ip );
+				GLOGE("failed to convert %s to inet_addr", ip );
 				ret = -1;
 			}
 		}
@@ -157,14 +157,14 @@ int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
 
 	if( 0 == ret ) {
 		if( bind( listenFd, (struct sockaddr*)&addr, sizeof( addr ) ) < 0 ) {
-			syslog( LOG_WARNING, "bind failed, errno %d, %s", errno, strerror( errno ) );
+			GLOGE("bind failed, errno %d, %s", errno, strerror( errno ) );
 			ret = -1;
 		}
 	}
 
 	if( 0 == ret ) {
 		if( ::listen( listenFd, 5 ) < 0 ) {
-			syslog( LOG_WARNING, "listen failed, errno %d, %s", errno, strerror( errno ) );
+			GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
 			ret = -1;
 		}
 	}
@@ -173,7 +173,7 @@ int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
 
 	if( 0 == ret ) {
 		* fd = listenFd;
-		syslog( LOG_NOTICE, "Listen on port [%d]", port );
+		GLOGI("Listen on port [%d]", port );
 	}
 
 	return ret;

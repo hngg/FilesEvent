@@ -21,7 +21,7 @@
 
 	ActorStation :: ~ActorStation() {
 		//mEventArg.Destroy();
-		GLOGV("ActorStation Destroy.\n");
+		GLOGV("ActorStation Destroy.");
 	}
 
 	void ActorStation :: setTimeout( int timeout )
@@ -52,7 +52,7 @@
 			tv.tv_usec=10;
 			event_loopexit(&tv);
 
-			GLOGV("ActorStation shutdown function.\n");
+			GLOGV("ActorStation shutdown function.");
 		}
 	}
 
@@ -77,7 +77,7 @@
 			mIsRunning = 0;
 			GLOGE( "Unable to create a thread for TCP server, %s", strerror( errno ) ) ;
 		}
-		GLOGI("ActorStation run ret:%d\n", ret);
+		GLOGI("ActorStation run ret:%d", ret);
 		return ret;
 	}
 
@@ -117,7 +117,7 @@
 			}
 
 			mEventArg.Destroy();
-			GLOGV("ActorStation is shutdown.\n");
+			GLOGV("ActorStation is shutdown.");
 
 			signal_del( &evSigTerm );
 			signal_del( &evSigInt );

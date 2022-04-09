@@ -13,7 +13,7 @@
 #include "protocol.h"
 #include "net_protocol.h"
 
-#define TAG "TaskFileSend"
+//#define TAG "TaskFileSend"
 #include "basedef.h"
 
 #undef   _FILE_OFFSET_BITS
@@ -67,7 +67,7 @@
 		mSendBuffer.bProcCmmd 	= true;
 		int ret = tcpSendData();
 
-		GLOGE("file %s len:%u\n", filename, mFileLen);//get_filesize(filename)
+		GLOGE("file %s len:%u", filename, mFileLen);//get_filesize(filename)
 	}
 
 
@@ -134,7 +134,7 @@
 				mHasReadLen 			+= mSendBuffer.dataLen;
 
 				mFrameCount++;
-				GLOGE("fread data len:%d mHasReadLen:%d cmd mFrameCount:%d\n", mSendBuffer.dataLen, mHasReadLen, mFrameCount);
+				GLOGE("fread data len:%d mHasReadLen:%d cmd mFrameCount:%d", mSendBuffer.dataLen, mHasReadLen, mFrameCount);
 			}
 			else{
 				ret = pushSendCmd(MODULE_MSG_DATAEND);
@@ -171,12 +171,12 @@
 			if(iRet<0) {
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
 				switch(errno) {
-				case EAGAIN:
-					usleep(2000);
-					continue;
+					case EAGAIN:
+						usleep(2000);
+						continue;
 
-				case EPIPE:
-					break;
+					case EPIPE:
+						break;
 				}
 				return iRet;
 			}
@@ -199,7 +199,7 @@
 				GLOGE("tcpSendData cmd errno:%d ret:%d.", errno, ret);
 
 			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) {
-					mSendBuffer.setToVideo();
+				mSendBuffer.setToVideo();
 			}
 		}
 		else//data
@@ -208,7 +208,7 @@
 			if(ret>0)
 				mSendBuffer.hasProcLen += ret;
 			else
-				GLOGE("tcpSendData dta errno:%d ret:%d .\n", errno, ret);
+				GLOGE("tcpSendData dta errno:%d ret:%d .", errno, ret);
 
 			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) {
 				mSendBuffer.reset();
@@ -240,7 +240,7 @@
 					mMsgQueue.push(MODULE_MSG_PING);
 				break;
 		}
-		GLOGE("pushSendCmd value:%d ret:%d.\n", iVal, ret);
+		GLOGE("pushSendCmd value:%d ret:%d.", iVal, ret);
 
 		return ret;
 	}
@@ -258,7 +258,7 @@
 					mRecvBuffer.bProcCmmd = false;
 					hasRecvLen = 0;
 
-					GLOGE("playback flag:%08x totalLen:%d ret:%d\n", head->dwFlag, mRecvBuffer.totalLen, ret);
+					GLOGE("playback flag:%08x totalLen:%d ret:%d", head->dwFlag, mRecvBuffer.totalLen, ret);
 					ret = recvPackData();
 				}
 			}
@@ -283,22 +283,22 @@
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.cmmd;
 				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) {
 					PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"name", acValue, &lValueLen);
-					GLOGE("recv control commond acValue:%s\n",acValue);
+					GLOGE("recv control commond acValue:%s",acValue);
 					if (strcmp(acValue, "start") == 0) {
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"tmstart", acValue, &lValueLen);
-						GLOGE("tmstart:%d\n",atoi(acValue));
+						GLOGE("tmstart:%d",atoi(acValue));
 
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"tmend", acValue, &lValueLen);
-						GLOGE("tmend:%d\n",atoi(acValue));
+						GLOGE("tmend:%d",atoi(acValue));
 						EventCall::addEvent( mSess, EV_WRITE, -1 );
 					}
 					else if(strcmp(acValue, "setpause") == 0) {
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"value", acValue, &lValueLen);
 						int value = atoi(acValue);
-						GLOGE("control setpause value:%d\n", value);
+						GLOGE("control setpause value:%d", value);
 					}
 					else if(strcmp(acValue, "send") == 0) {
 						mbSendingData = true;

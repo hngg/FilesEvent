@@ -10,7 +10,7 @@
 #include "event.h"
 #include "h264.h"
 
-#define TAG "TaskFileRecv"
+//#define TAG "TaskFileRecv"
 #include "basedef.h"
 
 
@@ -107,7 +107,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			GLOGE("send CMD err!");
+			GLOGE("send CMD err:%s", lpData);
 
 	}
 
@@ -131,7 +131,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			GLOGE("send CMD err!");
+			GLOGE("send CMD err:%s", lpData);
 
 	}
 
@@ -154,12 +154,12 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			GLOGE("send CMD err!");
+			GLOGE("send CMD err:%s", lpData);
 	}
 
 	TaskFileRecv::~TaskFileRecv() {
 
-		GLOGW("file seek:%ld\n", ftell(mwFile));
+		GLOGW("file seek:%ld", ftell(mwFile));
 
 		if(mwFile != NULL)
 			fclose(mwFile);
@@ -178,11 +178,11 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			if(iRet<0) {
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
 				switch(errno) {
-				case EAGAIN:
+				case EAGAIN:	//11 Resource temporarily unavailable,try again
 					usleep(2000);
 					continue;
 
-				case EPIPE:
+				case EPIPE:		//32 Broken pipe
 					break;
 				}
 				return iRet;
@@ -206,21 +206,21 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		nc.dwLength = nLength;
 		if ((iRet = sendEx(&nc, sizeof(nc)))<0)
 		{
-			GLOGE("send cmd err len = %d \n", nLength);
+			GLOGE("send cmd err len = %d ", nLength);
 			return iRet;
 		}
 
-		GLOGW("send head len:%u \n", sizeof(nc));
+		GLOGW("send head len:%u ", sizeof(nc));
 		if (nLength == 0)
 		{
 			return 0;
 		}
 		if ((iRet = sendEx(lpData, nLength))<0)
 		{
-			GLOGE("send lpdata err len = %d \n",nLength);
+			GLOGE("send lpdata err len = %d ",nLength);
 			return iRet;
 		}
-		GLOGW("send data len:%d lpData:%s\n", nLength, (char*)lpData);
+		GLOGW("send data len:%d lpData:%s", nLength, (char*)lpData);
 		return iRet;
 	}
 
@@ -238,7 +238,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 					mRecvBuffer.bProcCmmd = false;
 					hasRecvLen = 0;
 
-					GLOGE("playback flag:%08x cmd:%d totalLen:%d ret:%d\n", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
+					GLOGE("playback flag:%08x cmd:%d totalLen:%d ret:%d", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
 
 					if(head->dwLength>0) {
 						ret = recvPackData();
@@ -246,27 +246,28 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 					else
 					{
 						switch(head->dwCmd) {
-							case MODULE_MSG_DATAEND:
-#ifdef 	__ANDROID__
-						FileRecvCallback(mSid.mKey, RECV_END, 0);
-#endif
-								GLOGW("MODULE_MSG_DATAEND\n");
-								break;
-							case MODULE_MSG_SECTION_END:
+							case MODULE_MSG_DATAEND:	//69
+								#ifdef 	__ANDROID__
+									FileRecvCallback(mSid.mKey, RECV_END, 0);
+								#endif
+								GLOGW("MODULE_MSG_DATAEND");
+							break;
+
+							case MODULE_MSG_SECTION_END://70
 //								char lpData[2048];
 //								int nLength = sprintf(lpData, "<control name=\"start\" tmstart=\"10485760\" tmend=\"20485760\" />");
 //								if(SendCmd(MODULE_MSG_CONTROL_PLAY, 0, lpData, nLength)<0)
 //									GLOGE("send CMD err!");
-								break;
-						}
+							break;
+						}//switch
 					}
 				}//==
 			}//else return 0
 			else
 			{
-#ifdef 	__ANDROID__
-						FileRecvCallback(mSid.mKey, RECV_SOURCE_CLOSE, 0);
-#endif
+				#ifdef 	__ANDROID__
+					FileRecvCallback(mSid.mKey, RECV_SOURCE_CLOSE, 0);
+				#endif
 			}
 		}//bProcCmmd
 		else{
@@ -281,7 +282,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 	int TaskFileRecv::recvPackData() {
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		int ret = recv(mSid.mKey, mRecvBuffer.data+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
-		//GLOGE("-------------------recvPackData ret:%d\n",ret);
+		GLOGE("-------------------recvPackData ret:%d",ret);
 		if(ret>0) {
 			hasRecvLen += ret;
 			if(hasRecvLen==mRecvBuffer.totalLen) {
@@ -294,33 +295,34 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				LPFILE_GET  lpFrame;
 				switch(pCmdbuf->dwCmd) {
 
-					case MODULE_MSG_CONTROL_PLAY:
+					case MODULE_MSG_CONTROL_PLAY: //68
 						break;
 
-					case MODULE_MSG_VIDEO:
+					case MODULE_MSG_VIDEO:	//25
 						lpFrame 		= (LPFILE_GET)(pCmdbuf->lpData);
 						fwrite(lpFrame->lpData , 1 , lpFrame->nLength , mwFile);
 						fflush(mwFile);
-						GLOGW("frame len:%d\n", lpFrame->nLength);
-#ifdef 	__ANDROID__
-						FileRecvCallback(mSid.mKey, RECV_TELL_READ_LENGTH, lpFrame->nLength);
-#endif
+						GLOGW("frame len:%d", lpFrame->nLength);
+
+						#ifdef 	__ANDROID__
+							FileRecvCallback(mSid.mKey, RECV_TELL_READ_LENGTH, lpFrame->nLength);
+						#endif
 						break;
 
-					case MODULE_MSG_LOGINRET:
+					case MODULE_MSG_LOGINRET: //2
 						LPLOGIN_RET lpRet = (LPLOGIN_RET)(mRecvBuffer.data+mPackHeadLen);
 						LPFILE_INFO lpInfo= (LPFILE_INFO)lpRet->lpData;
 						mTotalLen = lpInfo->tmEnd;
 
-						GLOGW("mTotalLen:%d\n", mTotalLen);
+						GLOGW("mTotalLen:%d", mTotalLen);
 
 						char szCmd[100];
 						int len = sprintf(szCmd, "<control name=\"start\" tmstart=\"%d\" tmend=\"%d\" />", 0, mTotalLen);
 						SendCmd(MODULE_MSG_CONTROL_PLAY, 0, szCmd,len + 1);
 
-#ifdef 	__ANDROID__
-						FileRecvCallback(mSid.mKey, RECV_TELL_TOTAL_LENGTH, mTotalLen);
-#endif
+						#ifdef 	__ANDROID__
+							FileRecvCallback(mSid.mKey, RECV_TELL_TOTAL_LENGTH, mTotalLen);
+						#endif
 						break;
 				}
 

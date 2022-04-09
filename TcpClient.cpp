@@ -42,7 +42,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort) {
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*filepath) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
+	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setNonblock( mSockId );
@@ -53,7 +53,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, void *surface) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
+	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setNonblock( mSockId );
@@ -64,7 +64,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, void *surf
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*filepath, void *surface) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
+	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setNonblock( mSockId );
@@ -75,7 +75,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
+	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setNonblock( mSockId );
@@ -93,16 +93,16 @@ int TcpClient :: disConnect() {
 
 		uint16_t seq;
 		if(manager->get(mSockId, &seq)) {
-			GLOGW("disconnect begin\n");
+			GLOGW("disconnect begin");
 			manager->remove(mSockId);
 			event_del(mSession->getReadEvent());
 			event_del(mSession->getReadEvent());
 			event_del(mSession->getTimeEvent());
 			close(mSockId);
 			mSockId = 0;
-			GLOGW("disconnect remove session id:%d\n", mSockId);
+			GLOGW("disconnect remove session id:%d", mSockId);
 		}
-		GLOGW("disConnect sockid:%d.\n", mSockId);
+		GLOGW("disConnect sockid:%d.", mSockId);
 	}
 	return 0;
 }
@@ -120,10 +120,10 @@ int TcpClient :: registerEvent(const EventArg& evarg) {
 
 		//event_set( mSession->getWriteEvent(), mSockId, EV_WRITE, EventCall::onWrite, mSession );
 		//EventCall::addEvent( mSession, EV_WRITE, mSockId );
-		GLOGW("tcpclient registerEvent mSession done.\n");
+		GLOGW("tcpclient registerEvent mSession done.");
 	}
 	else
-		GLOGE("tcpclient registerEvent mSession is NULL.\n");
+		GLOGE("tcpclient registerEvent mSession is NULL.");
 
 	return 0;
 }

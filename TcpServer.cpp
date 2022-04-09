@@ -67,7 +67,7 @@ int TcpServer :: registerEvent(const EventArg& evarg) {
 	int ret = 0;
 
 	ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
-	GLOGW("create listenid:%d ret:%d\n", mListenFD, ret);
+	GLOGW("create listenid:%d ret:%d", mListenFD, ret);
 
 	memset( &mAcceptArg, 0, sizeof( AcceptArg_t ) );
 	mAcceptArg.mEventArg 		= (EventArg*)&evarg;
@@ -87,7 +87,7 @@ void TcpServer :: shutdown() {
 	if(mListenFD>0) {
 		close(mListenFD);
 		mListenFD = 0;
-		GLOGW("close listenid:%d\n", mListenFD);
+		GLOGW("close listenid:%d", mListenFD);
 	}
 }
 

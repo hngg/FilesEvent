@@ -129,7 +129,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 	char clientIP[ 32 ] = { 0 };
 	IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
-	GLOGW( "clientIP: %s clientFD:%d\n",clientIP, clientFD);
+	GLOGW( "clientIP: %s clientFD:%d",clientIP, clientFD);
 	//session->getRequest()->setClientIP( clientIP );
 
 	Session * session = new Session( sid );
@@ -459,7 +459,7 @@ void EventHelper :: error( void * arg )
 //	session->getHandler()->close();
 	close( EVENT_FD( session->getWriteEvent() ) );
 	delete session;
-	syslog( LOG_WARNING, "session(%d.%d) error, exit\n", sid.mKey, sid.mSeq );
+	GLOGE("session(%d.%d) error, exit\n", sid.mKey, sid.mSeq );
 
 }
 
@@ -518,7 +518,7 @@ void EventHelper :: doStart( Session * session )
 {
 	//session->setRunning( 1 );
 	//EventArg * eventArg = (EventArg*)session->getArg();
-	printf("doStart.\n");
+	GLOGI("doStart.\n");
 	//eventArg->getInputResultQueue()->push( new SP_SimpleTask( start, session, 1 ) );
 }
 

@@ -65,9 +65,10 @@ static jboolean StopServer(JNIEnv *env, jobject)
 
 ////////////////////////////////////////////client/////////////////////////////////////////////////////
 
-static jboolean StartFileRecv(JNIEnv *env, jobject, jstring destip, jint destport, jstring remoteFile, jstring saveFile)//ip port remotefile savefile
+static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint destport, jstring remoteFile, jstring saveFile)	//ip port remotefile savefile
 {
 	int ret = 0;
+	g_mClass = (jclass)env->NewGlobalRef(obj);
 	if(mpClient==NULL) {
 
 		jboolean isOk = JNI_FALSE;
@@ -136,6 +137,9 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
 	JNIEnv* env = NULL;
 	jint result = -1;
+
+	GLOGI("Compile: %s %s\n", __DATE__, __TIME__);
+
 	if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
 		GLOGE("GetEnv failed!");
 		return result;
@@ -143,10 +147,9 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 	g_javaVM = vm;
 
+	registerNativeMethods(env, REG_PATH, video_method_table, NELEM(video_method_table));
+
 	GLOGW("JNI_OnLoad......");
-	registerNativeMethods(env,
-			REG_PATH, video_method_table,
-			NELEM(video_method_table));
 
 	return JNI_VERSION_1_4;
 }
