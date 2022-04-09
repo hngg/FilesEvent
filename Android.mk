@@ -32,12 +32,9 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/evbuffer.c \
 				net/signal.c \
 				net/log.c \
-				net/net_protocol.c \
-				$(THREAD_PATH)/gthreadpool.cpp \
-				$(NAREDEC_PATH)/NALDecoder.cpp \
+				net/net_utils.c \
 				ActorStation.cpp \
 				BufferCache.cpp \
-				DataUtils.cpp \
 				EventCall.cpp \
 				IOUtils.cpp \
 				Session.cpp \

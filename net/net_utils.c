@@ -10,20 +10,20 @@
  *COMPANY:      	 
 ===========================================================================*/
 
+
+// #include <stdlib.h>
+// #include <assert.h>
+
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <arpa/inet.h>
+// #include "basedef.h"
+
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-
+#include "net_utils.h"
 #include "protocol.h"
-#include "net_protocol.h"
-#include "basedef.h"
-
 
 int int2hex2str(char *pValue,int lValue,int lCharLen)
 {
@@ -32,6 +32,7 @@ int int2hex2str(char *pValue,int lValue,int lCharLen)
     sprintf(tmp,"%%0%dx",lCharLen);
     return sprintf(pValue,tmp,lValue);
 }
+
 int int2str(char *pValue,int lValue,int lCharLen)
 {
     char tmp[10];
@@ -40,6 +41,50 @@ int int2str(char *pValue,int lValue,int lCharLen)
     return sprintf(pValue,tmp,lValue);
 }
 
+/*
+XML data
+*/
+int PROTO_GetValueByName(char *pData,char *pName,char *pValueOut,int *pValueLen)
+{
+    char *ptr;
+	char *p;
+	int pNameLen;
+	NET_CMD *stCmd = (NET_CMD*)pData;
+
+	pNameLen = strlen(pName);
+	//GLOGE("pNameLen:%d, lpData:%s \n", pNameLen, stCmd->lpData);
+
+    ptr = stCmd->lpData;
+	p = strstr(ptr, pName);
+
+	if(NULL != p)
+	{
+		//GLOGE("find string\n");
+		if(*(p + pNameLen) == '=')
+		{
+			//LOGD("find = symbol. \n");
+			int i = 0;
+			p = p + pNameLen + 2;
+			while(*(p + i) != '\"')
+			{
+				i++;
+			}
+			//*pValue = p;
+			*pValueLen = i-1;
+			memcpy(pValueOut, p, i);
+			//GLOGE("pValue:%s , pValueLen:%d \n", *pValue, *pValueLen);
+			//printf("p:%s\n", p);
+			return 1;
+		}
+		*pValueLen = 0;
+		return 0;
+	}
+	*pValueLen = 0;
+	
+    return 0; 
+}
+
+/*
 int  PROTO_MakeDataHead(PROTO_ST_MSG *stMsg,int cmd)
 {
     //�Զ��������ݴ�С
@@ -74,12 +119,13 @@ int  PROTO_MakeDataHead(PROTO_ST_MSG *stMsg,int cmd)
     return stMsg->len;
     
 }
+
 int PROTO_GetPackDataLen(char *pDataHead)
 {
 	NET_CMD *stCmd = (NET_CMD*)pDataHead;
 	unsigned int len;
 
-#ifdef MY_LITTLE_ENDIAN /*2018.10.17*/
+#ifdef MY_LITTLE_ENDIAN 
     len = (stCmd->dwLength);
 #else
 	len = ntohl(stCmd->dwLength);
@@ -176,57 +222,13 @@ int PROTO_GetCommand(char *pData)
 
     GLOGE("stCmd->dwFlag=0x%x, stCmd->dwCmd=0x%x, stCmd->dwIndex=0x%x, stCmd->dwLength=0x%x \n", stCmd->dwFlag, stCmd->dwCmd, stCmd->dwIndex, stCmd->dwLength);
 
-#ifdef MY_LITTLE_ENDIAN /*2018.10.17*/
+#ifdef MY_LITTLE_ENDIAN 
     cmd = (stCmd->dwCmd);
 #else
 	cmd = ntohl(stCmd->dwCmd);
 #endif
 	
 	return cmd;
-}
-
-/*
-XML data
-*/
-int PROTO_GetValueByName(char *pData,char *pName,char *pValueOut,int *pValueLen)
-{
-    char *ptr;
-	char *p;
-	int pNameLen;
-	NET_CMD *stCmd = (NET_CMD*)pData;
-
-	pNameLen = strlen(pName);
-	//GLOGE("pNameLen:%d, lpData:%s \n", pNameLen, stCmd->lpData);
-
-    ptr = stCmd->lpData;
-	p = strstr(ptr, pName);
-
-	if(NULL != p)
-	{
-		//GLOGE("find string\n");
-		if(*(p + pNameLen) == '=')
-		{
-			//LOGD("find = symbol. \n");
-			int i = 0;
-			p = p + pNameLen + 2;
-			while(*(p + i) != '\"')
-			{
-				i++;
-			}
-			//*pValue = p;
-			*pValueLen = i-1;
-			memcpy(pValueOut, p, i);
-			//GLOGE("pValue:%s , pValueLen:%d \n", *pValue, *pValueLen);
-			//printf("p:%s\n", p);
-			return 1;
-		}
-		*pValueLen = 0;
-		return 0;
-	}
-	*pValueLen = 0;
-	
-    return 0;
-    
 }
 
 int  PROTO_MakeRegistMsg(PROTO_ST_MSG *stMsg,char *pcDeviceSerial,char *pcDeviceName)
@@ -333,7 +335,7 @@ int PROTO_DestoryMsg(PROTO_ST_MSG *msg)
     msg->total = 0;
     return 0;
 }
-
+*/
 
 //int GetResult(int dwMsg,char *pData, int nLength,void* lpResult,int* nResult)
 //{

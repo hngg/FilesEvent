@@ -225,6 +225,7 @@ enum MODULE_MSG_ID{
 #define ERR_TIMEOUT		23
 #define ERR_DOING		24
 
+//user in session
 ////#pragma   pack(1)
 typedef struct tagNET_HEAD
 {
@@ -263,6 +264,64 @@ typedef struct tagFILE_GET
 	char lpData[];
 }FILE_GET,*LPFILE_GET;
 
+
+#define ARRAY_NUM   100
+
+// lpLR->lpData Ϊ�ļ�ͷ��Ϣ���ṹ�嶨�����£�
+//#pragma   pack(1)
+typedef struct tagPLAYER_INIT_INFO
+{
+	int nCodeID;
+	int nFps;
+	int nWidth;
+	int nHeigth;
+	int nSampleRate;
+	int nBistspersample;
+	int nChannel;
+	int nAudioFormat;
+	int sample_fmt;
+	unsigned long long channel_layout;	
+	int nCodecFlag;
+	int bits_per_sample;
+	int bit_rate;
+	int me_method;
+	int bit_ratetolerance;
+	int block_align;
+	
+	int gop_size;
+	int frame_size;
+	int frame_number;
+	int ildct_cmp;
+	int me_subpel_quality;
+	int mb_lmax;
+	int mb_lmin;
+	int me_penalty_compensation;
+	float qblur;
+	int  flags;
+	int extsize;
+	char extdata[ARRAY_NUM];
+	int  nVideoExtSize;
+	char	videoExtData[ARRAY_NUM];
+}PLAYER_INIT_INFO,*LPPLAYER_INIT_INFO;//�ļ�ͷ��Ϣ
+//#pragma   pack(0)
+
+#pragma   pack(1)
+typedef struct tagFILE_INFO
+{
+	PLAYER_INIT_INFO pi;
+	unsigned int tmStart;
+	unsigned int tmEnd;
+}FILE_INFO,*LPFILE_INFO;//�ļ���Ϣ
+#pragma   pack(0)
+
+// #pragma   pack(1)
+// typedef struct tagFILE_INFOEX
+// {
+// 	FILE_INFO *stFileInfo;
+// 	char lpData[102400];
+// }FILE_INFOEX,*LPFILE_INFOEX;
+// #pragma   pack(0)
+
 //typedef struct tagFILE_DATA
 //{
 //	DWORD dwPos;
@@ -271,14 +330,14 @@ typedef struct tagFILE_GET
 //}FILE_DATA,*LPFILE_DATA;
 
 //#pragma   pack(1)
-typedef struct tagAV_FRAME
-{
-	unsigned int dwFrameType;
-	int   nLength;
-	unsigned int dwTick;
-	unsigned int dwTm;
-	char  lpData[];
-}AV_FRAME,*LPAV_FRAME;
+// typedef struct tagAV_FRAME
+// {
+// 	unsigned int dwFrameType;
+// 	int   nLength;
+// 	unsigned int dwTick;
+// 	unsigned int dwTm;
+// 	char  lpData[];
+// }AV_FRAME,*LPAV_FRAME;
 //#pragma   pack()
 
 
@@ -418,146 +477,91 @@ NET_CMD nc;
 */
 //==============================================================
 
-#define ARRAY_NUM   100
 
-// lpLR->lpData Ϊ�ļ�ͷ��Ϣ���ṹ�嶨�����£�
-//#pragma   pack(1)
-typedef struct tagPLAYER_INIT_INFO
-{
-	int nCodeID;
-	int nFps;
-	int nWidth;
-	int nHeigth;
-	int nSampleRate;
-	int nBistspersample;
-	int nChannel;
-	int nAudioFormat;
-	int sample_fmt;
-	unsigned long long channel_layout;	
-	int nCodecFlag;
-	int bits_per_sample;
-	int bit_rate;
-	int me_method;
-	int bit_ratetolerance;
-	int block_align;
-	
-	int gop_size;
-	int frame_size;
-	int frame_number;
-	int ildct_cmp;
-	int me_subpel_quality;
-	int mb_lmax;
-	int mb_lmin;
-	int me_penalty_compensation;
-	float qblur;
-	int  flags;
-	int extsize;
-	char extdata[ARRAY_NUM];
-	int  nVideoExtSize;
-	char	videoExtData[ARRAY_NUM];
-}PLAYER_INIT_INFO,*LPPLAYER_INIT_INFO;//�ļ�ͷ��Ϣ
-//#pragma   pack(0)
 
-#pragma   pack(1)
-typedef struct tagFILE_INFO
-{
-	PLAYER_INIT_INFO pi;
-	unsigned int tmStart;
-	unsigned int tmEnd;
-}FILE_INFO,*LPFILE_INFO;//�ļ���Ϣ
-#pragma   pack(0)
+// typedef struct _send_Package 
+// {
+// 	int				nType_id;
+// 	int				nFrameType;
+// 	void			*pPackageData;
+// 	int				nSize;
+// 	int				nSendCount;
+// 	pthread_mutex_t	refrence_lock;
+// 	int				nRefrenceCount;
+// 	AV_FRAME *av;
+// }send_Package;
 
-#pragma   pack(1)
-typedef struct tagFILE_INFOEX
-{
-	FILE_INFO *stFileInfo;
-	char lpData[102400];
-}FILE_INFOEX,*LPFILE_INFOEX;
-#pragma   pack(0)
+// typedef struct _listNode
+// {
+// 	send_Package		*pNodeData;
+// 	struct _listNode	*pNext;
+// }listNode;
 
-typedef struct _send_Package 
-{
-	int				nType_id;
-	int				nFrameType;
-	void			*pPackageData;
-	int				nSize;
-	int				nSendCount;
-	pthread_mutex_t	refrence_lock;
-	int				nRefrenceCount;
-	AV_FRAME *av;
-}send_Package;
+// typedef struct _sendList
+// {
+// 	int				nlength;
+// 	listNode		*lFirst;
+// 	listNode		*lLast;
+// 	pthread_mutex_t	list_lock;
+// }sendList;
 
-typedef struct _listNode
-{
-	send_Package		*pNodeData;
-	struct _listNode	*pNext;
-}listNode;
+// typedef listNode *		LinkNodePtr;
+// typedef sendList *		LinkListPtr;
+// typedef send_Package *	LinkPackagePtr;
 
-typedef struct _sendList
-{
-	int				nlength;
-	listNode		*lFirst;
-	listNode		*lLast;
-	pthread_mutex_t	list_lock;
-}sendList;
+// int initLinkList(LinkListPtr *list);
+// int insertLinkList(LinkListPtr *list ,LinkPackagePtr *data);
+// int removeLinkListNode(LinkListPtr *list);
+// int destroyLinkList(LinkListPtr *list);
+// void addRefrence(LinkPackagePtr *package);
+// void releaseTlibPackage(LinkPackagePtr *package);
 
-typedef listNode *		LinkNodePtr;
-typedef sendList *		LinkListPtr;
-typedef send_Package *	LinkPackagePtr;
+// typedef struct _FRAME_START_PARAM
+// {
+//     short sPort;
+//     char  acServerAddr[16] ;
+//     char  serial_number[64] ;
+// 	char  device_place[256];
+// }PACKED FRAME_START_PARAM;
 
-int initLinkList(LinkListPtr *list);
-int insertLinkList(LinkListPtr *list ,LinkPackagePtr *data);
-int removeLinkListNode(LinkListPtr *list);
-int destroyLinkList(LinkListPtr *list);
-void addRefrence(LinkPackagePtr *package);
-void releaseTlibPackage(LinkPackagePtr *package);
+// typedef struct _HIS_VIDEO_FILE_CONTEXT
+// {
+//     char    filename[128];
+//     unsigned char   ClientID[32];
+//     FILE    *fd;
+//     unsigned    fileLength;
+//     short   needClientID;
+//     short   flag;//0-stop; 1-start; 2-switch file
+// } PACKED HIS_VIDEO_FILE_CONTEXT;
 
-typedef struct _FRAME_START_PARAM
-{
-    short sPort;
-    char  acServerAddr[16] ;
-    char  serial_number[64] ;
-	char  device_place[256];
-}PACKED FRAME_START_PARAM;
+// typedef struct _cam_connection
+// {
+// 	int				fd;
+// 	int				nVChnID;
+// 	int				nAChnID;
+// 	sendList		*pSend_list;
+// 	unsigned int	nBlockedSize;
+// 	unsigned int	nBlockedFrame;
+// 	unsigned int	nBlockedVideoFrame;
+// 	struct _cam_connection	*pNext;
+//     int				send_audio_flag;
+//     int				send_video_flag;
+//     int				nRunState; //�����߳��Ƿ�������
+// 	unsigned char	bWaitForIFrame;
+// 	unsigned char	bIsServerConn;
+// 	unsigned char	bIsLogin;
+// 	unsigned char	bIsRecording;
+//     HIS_VIDEO_FILE_CONTEXT his_video_context;
+// } PACKED cam_connection;
 
-typedef struct _HIS_VIDEO_FILE_CONTEXT
-{
-    char    filename[128];
-    unsigned char   ClientID[32];
-    FILE    *fd;
-    unsigned    fileLength;
-    short   needClientID;
-    short   flag;//0-stop; 1-start; 2-switch file
-} PACKED HIS_VIDEO_FILE_CONTEXT;
+// void delay(int nMillisecond);
+// void hda_av_service_thread();
+// //void SendDataPackage(int type, int channel_id, unsigned char* data, unsigned int size, TagFrameHead *stSendHead);
 
-typedef struct _cam_connection
-{
-	int				fd;
-	int				nVChnID;
-	int				nAChnID;
-	sendList		*pSend_list;
-	unsigned int	nBlockedSize;
-	unsigned int	nBlockedFrame;
-	unsigned int	nBlockedVideoFrame;
-	struct _cam_connection	*pNext;
-    int				send_audio_flag;
-    int				send_video_flag;
-    int				nRunState; //�����߳��Ƿ�������
-	unsigned char	bWaitForIFrame;
-	unsigned char	bIsServerConn;
-	unsigned char	bIsLogin;
-	unsigned char	bIsRecording;
-    HIS_VIDEO_FILE_CONTEXT his_video_context;
-} PACKED cam_connection;
-
-void delay(int nMillisecond);
-void hda_av_service_thread();
-//void SendDataPackage(int type, int channel_id, unsigned char* data, unsigned int size, TagFrameHead *stSendHead);
-
-void SendDataPackage(int type, unsigned char* data, TagFrameHead *stSendHead);
-int SetIpncRS485MotorPtz(unsigned int nPtzcmd, unsigned char cbaudrate);
-void RemoveSendPackage(cam_connection *pConn);
-void releaseAllPackage(cam_connection *pConn);
+// void SendDataPackage(int type, unsigned char* data, TagFrameHead *stSendHead);
+// int SetIpncRS485MotorPtz(unsigned int nPtzcmd, unsigned char cbaudrate);
+// void RemoveSendPackage(cam_connection *pConn);
+// void releaseAllPackage(cam_connection *pConn);
 #ifdef __cplusplus
 }
 #endif

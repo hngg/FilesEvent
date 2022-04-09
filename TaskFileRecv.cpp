@@ -15,10 +15,10 @@
 
 
 enum FILE_RECV_STATUS{
-	RECV_END,
-	RECV_TELL_READ_LENGTH,
-	RECV_TELL_TOTAL_LENGTH,
-	RECV_SOURCE_CLOSE
+	RECV_TELL_TOTAL_LENGTH = 1,	//file total length
+	RECV_TELL_READ_LENGTH,		//current recv length
+	RECV_TELL_END,				//file recv end
+	RECV_TELL_SAVE_DONE			//file save done
 };
 
 
@@ -96,7 +96,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				,mRecvHeadLen(0)
 				,mTotalLen(0)
 	{
-		mCmdBuffer.reset();
+		//mCmdBuffer.reset();
 		mRecvBuffer.reset();
 		mRecvBuffer.createMem(FILE_MEMORY_LEN);
 
@@ -120,7 +120,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				,mRecvHeadLen(0)
 				,mTotalLen(0)
 	{
-		mCmdBuffer.reset();
+		//mCmdBuffer.reset();
 		mRecvBuffer.reset();
 		mRecvBuffer.createMem(FILE_MEMORY_LEN);
 
@@ -143,9 +143,9 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				,mRecvHeadLen(0)
 				,mTotalLen(0)
 	{
-		mCmdBuffer.reset();
+		//mCmdBuffer.reset();
 		mRecvBuffer.reset();
-		mRecvBuffer.createMem(FILE_MEMORY_LEN);
+		mRecvBuffer.createMem(FILE_MEMORY_LEN+sizeof(NET_CMD));
 
 		mwFile = fopen(saveFile, "w");
 
@@ -224,6 +224,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		return iRet;
 	}
 
+	//read event callback function
 	int TaskFileRecv::readBuffer() {
 		int ret = -1;
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
@@ -234,11 +235,11 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				hasRecvLen+=ret;
 				if(hasRecvLen==mPackHeadLen) {
 					LPNET_CMD head = (LPNET_CMD)mRecvBuffer.data;
-					mRecvBuffer.totalLen  = head->dwLength;
+					mRecvBuffer.totalLen  = head->dwLength;//package data length
 					mRecvBuffer.bProcCmmd = false;
 					hasRecvLen = 0;
 
-					GLOGE("playback flag:%08x cmd:%d totalLen:%d ret:%d", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
+					GLOGE("playback flag:%08x cmd:%d read event need recv totalLen:%d ret:%d", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
 
 					if(head->dwLength>0) {
 						ret = recvPackData();
@@ -248,7 +249,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						switch(head->dwCmd) {
 							case MODULE_MSG_DATAEND:	//69
 								#ifdef 	__ANDROID__
-									FileRecvCallback(mSid.mKey, RECV_END, 0);
+									FileRecvCallback(mSid.mKey, RECV_TELL_END, 0);
 								#endif
 								GLOGW("MODULE_MSG_DATAEND");
 							break;
@@ -266,7 +267,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			else
 			{
 				#ifdef 	__ANDROID__
-					FileRecvCallback(mSid.mKey, RECV_SOURCE_CLOSE, 0);
+					FileRecvCallback(mSid.mKey, RECV_TELL_SAVE_DONE, 0);
 				#endif
 			}
 		}//bProcCmmd
@@ -279,10 +280,11 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		return ret;
 	}
 
+	//receive file data,head length is 16byte,other is data
 	int TaskFileRecv::recvPackData() {
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		int ret = recv(mSid.mKey, mRecvBuffer.data+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
-		GLOGE("-------------------recvPackData ret:%d",ret);
+		GLOGE("------recvPackData ret:%d hasRecvLne:%d totalLen:%d", ret, hasRecvLen, mRecvBuffer.totalLen);
 		if(ret>0) {
 			hasRecvLen += ret;
 			if(hasRecvLen==mRecvBuffer.totalLen) {
@@ -314,7 +316,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						LPFILE_INFO lpInfo= (LPFILE_INFO)lpRet->lpData;
 						mTotalLen = lpInfo->tmEnd;
 
-						GLOGW("mTotalLen:%d", mTotalLen);
+						GLOGW("The file to recv TotalLen:%d", mTotalLen);
 
 						char szCmd[100];
 						int len = sprintf(szCmd, "<control name=\"start\" tmstart=\"%d\" tmend=\"%d\" />", 0, mTotalLen);
@@ -329,6 +331,10 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);
 
 			    mRecvBuffer.reset();
+			}
+			else if(hasRecvLen>mRecvBuffer.totalLen)
+			{
+				GLOGE("hasRecvLen:%d bigger than totalLen:%d maybe memory out.", hasRecvLen, mRecvBuffer.totalLen);
 			}
 		}
 		else if(ret == 0) {

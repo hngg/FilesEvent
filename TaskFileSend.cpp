@@ -11,7 +11,7 @@
 
 #include "event.h"
 #include "protocol.h"
-#include "net_protocol.h"
+#include "net_utils.h"
 
 //#define TAG "TaskFileSend"
 #include "basedef.h"
@@ -75,8 +75,11 @@
 		delete mInBuffer;
 		mInBuffer = NULL;
 
-		if(mpFile != NULL)
+		if(mpFile != NULL) {
 			fclose(mpFile);
+			mpFile = NULL;
+		}
+			
 
 		mMsgQueue.clearQueue();
 		mSendBuffer.releaseMem();

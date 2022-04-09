@@ -30,7 +30,7 @@
 #include "h264.h"
 #include "basedef.h"
 #include "protocol.h"
-#include "net_protocol.h"
+#include "net_utils.h"
 
 
 //---------------------------sessionManager----------------------------------------

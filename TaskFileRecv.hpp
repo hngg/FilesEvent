@@ -24,7 +24,7 @@ class TaskFileRecv :public TaskBase {
 
 		int recvPackData();
 
-		struct tagCmdBuffer 		mCmdBuffer;
+		//struct tagCmdBuffer 		mCmdBuffer;
 		struct tagFileProcBuffer 	mRecvBuffer;
 		Session			*mSess;
 		FILE			*mwFile;
