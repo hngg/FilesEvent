@@ -10,8 +10,8 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "UdpServer.hpp"
-#include "ActorStation.hpp"
+#include "UdpServer.h"
+#include "ActorStation.h"
 
 #define PORT 31000
 

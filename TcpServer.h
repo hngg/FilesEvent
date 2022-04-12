@@ -1,22 +1,24 @@
 
 
-#ifndef __udpserver_hpp__
-#define __udpserver_hpp__
+#ifndef __tcpserver_h__
+#define __tcpserver_h__
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventCall.hpp"
-#include "TaskBase.hpp"
+#include "EventCall.h"
+#include "TaskBase.h"
 
 #include "event.h"
 
+#define TEST_PORT 31003
+
 // half-sync/half-async thread pool server
-class UdpServer {
+class TcpServer {
 public:
-	UdpServer( const char * bindIP, int port );
-	~UdpServer();
+	TcpServer( const char * bindIP, int port );
+	~TcpServer();
 
 	int registerEvent(const EventArg& evarg);
 	void shutdown();

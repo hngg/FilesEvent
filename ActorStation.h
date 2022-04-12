@@ -1,13 +1,14 @@
-#ifndef __actorstation_hpp__
-#define __actorstation_hpp__
+#ifndef __actorstation_h__
+#define __actorstation_h__
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventCall.hpp"
-#include "TaskBase.hpp"
 #include "event.h"
+
+#include "EventCall.h"
+#include "TaskBase.h"
 
 
 class ActorStation {

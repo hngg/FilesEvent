@@ -10,11 +10,10 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "TcpServer.hpp"
-#include "TcpClient.hpp"
-#include "ActorStation.hpp"
+#include "TcpServer.h"
+#include "TcpClient.h"
+#include "ActorStation.h"
 
-#define PORT 31000
 
 void usage(char*exename) {
 	printf("Usage: %s -v filepath\n -f remotefile savefile\n", exename);
@@ -25,7 +24,7 @@ void usage(char*exename) {
 
 int main( int argc, char * argv[] )
 {
-	int port = PORT, maxThreads = 10;
+	int port = TEST_PORT, maxThreads = 10;
 	//const char * serverType = "hahs";
 
 	if(argc<2) {

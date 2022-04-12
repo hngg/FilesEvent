@@ -1,11 +1,11 @@
-#ifndef __tcpclient_hpp__
-#define __tcpclient_hpp__
+#ifndef __tcpclient_h__
+#define __tcpclient_h__
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventCall.hpp"
+#include "EventCall.h"
 
 class Session;
 

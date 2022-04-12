@@ -1,10 +1,10 @@
-#ifndef __TaskFileSend_hpp__
-#define __TaskFileSend_hpp__
+#ifndef __TaskFileSend_h__
+#define __TaskFileSend_h__
 
 
 #include "h264.h"
 #include "GQueue.h"
-#include "TaskBase.hpp"
+#include "TaskBase.h"
 
 
 class BufferCache;

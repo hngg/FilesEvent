@@ -3,9 +3,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "TaskFileRecv.hpp"
-#include "BufferCache.hpp"
-#include "EventCall.hpp"
+#include "TaskFileRecv.h"
+#include "BufferCache.h"
+#include "EventCall.h"
 
 #include "event.h"
 #include "h264.h"
@@ -210,7 +210,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			return iRet;
 		}
 
-		GLOGW("send head len:%u ", sizeof(nc));
+		GLOGW("send head len:%d ", (int)sizeof(nc));
 		if (nLength == 0)
 		{
 			return 0;

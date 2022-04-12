@@ -1,7 +1,7 @@
 
 
-#ifndef __buffercache_hpp__
-#define __buffercache_hpp__
+#ifndef __buffercache_h__
+#define __buffercache_h__
 
 #include <stdlib.h>
 

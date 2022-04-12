@@ -1,9 +1,8 @@
 
 
-#include "UdpClient.hpp"
-#include "IOUtils.hpp"
-
-#include "Session.hpp"
+#include "UdpClient.h"
+#include "IOUtils.h"
+#include "Session.h"
 
 #include "event.h"
 #include "basedef.h"
@@ -34,7 +33,7 @@ int UdpClient :: connect(const char* destIp, unsigned short destPort) {
 	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
-		IOUtils::setNonblock( mSockId );
+		IOUtils::setBlock( mSockId, 0 );
 		mSession = new Session( mSid, VIDEO_RECV_MSG );
 	}
 	return ret;
@@ -45,7 +44,7 @@ int UdpClient :: connect(const char* destIp, unsigned short destPort, const char
 	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
-		IOUtils::setNonblock( mSockId );
+		IOUtils::setBlock( mSockId, 0 );
 		mSession = new Session( mSid, VIDEO_RECV_MSG, (char*)filepath );
 	}
 	return ret;
@@ -56,7 +55,7 @@ int UdpClient :: connect(const char* destIp, unsigned short destPort, void *surf
 	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
-		IOUtils::setNonblock( mSockId );
+		IOUtils::setBlock( mSockId, 0 );
 		mSession = new Session( mSid, VIDEO_RECV_MSG, surface );
 	}
 	return ret;
@@ -67,7 +66,7 @@ int UdpClient :: connect(const char* destIp, unsigned short destPort, const char
 	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
-		IOUtils::setNonblock( mSockId );
+		IOUtils::setBlock( mSockId, 0 );
 		mSession = new Session( mSid, VIDEO_RECV_MSG, (char*)filepath, surface );
 	}
 	return ret;
@@ -78,7 +77,7 @@ int UdpClient :: connect(const char* destIp, unsigned short destPort, const char
 	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
-		IOUtils::setNonblock( mSockId );
+		IOUtils::setBlock( mSockId, 0 );
 		mSession = new Session( mSid, FILE_RECV_MSG, (char*)remoteFile, (char*)saveFile );
 	}
 	return ret;

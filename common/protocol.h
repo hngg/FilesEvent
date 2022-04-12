@@ -12,7 +12,7 @@
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
 
-//#include "global.h"
+
 #include <pthread.h>
 
 
@@ -55,9 +55,9 @@
 #pragma   pack(1)
 typedef struct TagFrameHead
 {
-	unsigned int	gs_frame_type;//video frame type
-	unsigned int	gs_av_type;  // 1:means video,2:means audio
-	unsigned int	gs_size;//audio or video data size
+	unsigned int	gs_frame_type;	//video frame type
+	unsigned int	gs_av_type;  	// 1:means video,2:means audio
+	unsigned int	gs_size;		//audio or video data size
 	unsigned int	gs_frameRate_samplingRate;//video frame rate or audio samplingRate
 	unsigned int	gs_timestamp;
 	unsigned int	gs_video_cap;//video's capability
@@ -199,31 +199,31 @@ enum MODULE_MSG_ID{
 
 
 //err code for client.
-#define ERR_NOERROR		0
-#define ERR_FUNADDR		1
-#define ERR_NEWMEM		2
-#define ERR_PARXML		3
-#define ERR_NONEEDXML	4
-#define ERR_PARAM		5
-#define ERR_NOSURPORT	6
-#define ERR_FAILE		7
-#define ERR_DISCONNECT	8
-#define ERR_MAXCOUNT	9
-#define ERR_INITDB		10
-#define ERR_SNDERROR	11
-#define ERR_NETSERVER	12
-#define ERR_CONNECT		13
-#define ERR_NETSEND		14
-#define ERR_QUERYDB		15
-#define ERR_OBJERROR	16
-#define ERR_NETRECV		17
-#define ERR_MSGERROR	18
-#define ERR_NOOBJECT	19
-#define ERR_NOTWORK		20
-#define ERR_DEVTYPE		21
-#define ERR_OBJEXIST	22
-#define ERR_TIMEOUT		23
-#define ERR_DOING		24
+ #define ERR_NOERROR		0
+// #define ERR_FUNADDR		1
+// #define ERR_NEWMEM		2
+// #define ERR_PARXML		3
+// #define ERR_NONEEDXML	4
+// #define ERR_PARAM		5
+// #define ERR_NOSURPORT	6
+// #define ERR_FAILE		7
+// #define ERR_DISCONNECT	8
+// #define ERR_MAXCOUNT	9
+// #define ERR_INITDB		10
+// #define ERR_SNDERROR	11
+// #define ERR_NETSERVER	12
+// #define ERR_CONNECT		13
+// #define ERR_NETSEND		14
+// #define ERR_QUERYDB		15
+// #define ERR_OBJERROR	16
+// #define ERR_NETRECV		17
+// #define ERR_MSGERROR	18
+// #define ERR_NOOBJECT	19
+// #define ERR_NOTWORK		20
+// #define ERR_DEVTYPE		21
+// #define ERR_OBJEXIST	22
+// #define ERR_TIMEOUT		23
+// #define ERR_DOING		24
 
 //user in session
 ////#pragma   pack(1)

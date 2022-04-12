@@ -1,13 +1,10 @@
 
-#ifndef __session_hpp__
-#define __session_hpp__
+#ifndef __session_h__
+#define __session_h__
 
 
 #include <unistd.h>
-#include "TaskBase.hpp"
-
-//class SP_Handler;
-//class SP_ArrayList;
+#include "TaskBase.h"
 
 
 struct event;

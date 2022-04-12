@@ -1,11 +1,11 @@
-#ifndef __udpclient_hpp__
-#define __udpclient_hpp__
+#ifndef __udpclient_h__
+#define __udpclient_h__
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventCall.hpp"
+#include "EventCall.h"
 
 class Session;
 

@@ -10,14 +10,13 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "TcpServer.hpp"
-#include "ActorStation.hpp"
+#include "TcpServer.h"
+#include "ActorStation.h"
 
-#define PORT 31000
 
 int main( int argc, char * argv[] )
 {
-	int port = PORT, maxThreads = 10;
+	int port = TEST_PORT, maxThreads = 10;
 	//const char * serverType = "hahs";
 
 	extern char *optarg ;
@@ -45,18 +44,24 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	ActorStation station;
-	station.startup();
+	int count = 0;
+	while(1) {
+		ActorStation station;
+		station.startup();
 
-	TcpServer server( "", port );
-	server.setMaxThreads( maxThreads );
-	server.setReqQueueSize( 100, "HTTP/1.1 500 Sorry, server is busy now!\r\n" );
-	server.registerEvent(station.getEventArg());
+		TcpServer server( "127.0.0.1", port );
+		server.setMaxThreads( maxThreads );
+		server.setReqQueueSize( 100, "HTTP/1.1 500 Sorry, server is busy now!\r\n" );
+		server.registerEvent(station.getEventArg());
 
-	getchar();
+		getchar();
 
-	server.shutdown();
-	station.shutdown();
+		server.shutdown();
+		station.shutdown();
+		printf( "______shutdown done %d\n", ++count);
+	}
+
+
 	return 0;
 }
 

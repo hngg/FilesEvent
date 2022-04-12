@@ -1,5 +1,5 @@
-#ifndef __TaskBase_hpp__
-#define __TaskBase_hpp__
+#ifndef __TaskBase_h__
+#define __TaskBase_h__
 
 
 

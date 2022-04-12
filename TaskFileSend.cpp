@@ -5,9 +5,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "TaskFileSend.hpp"
-#include "BufferCache.hpp"
-#include "EventCall.hpp"
+#include "TaskFileSend.h"
+#include "BufferCache.h"
+#include "EventCall.h"
 
 #include "event.h"
 #include "protocol.h"

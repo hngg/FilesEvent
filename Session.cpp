@@ -14,9 +14,9 @@
 //#include "TaskVideoRecv.hpp"
 //#include "TaskVideoSend.hpp"
 
-#include "TaskFileSend.hpp"
-#include "TaskFileRecv.hpp"
-#include "Session.hpp"
+#include "TaskFileSend.h"
+#include "TaskFileRecv.h"
+#include "Session.h"
 
 #ifdef __ANDROID__
 //#include "TaskVideoRealSend.hpp"

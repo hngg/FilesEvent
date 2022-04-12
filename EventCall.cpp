@@ -10,11 +10,11 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 
-#include "EventCall.hpp"
-#include "Session.hpp"
-#include "BufferCache.hpp"
+#include "EventCall.h"
+#include "Session.h"
+#include "BufferCache.h"
 
-#include "IOUtils.hpp"
+#include "IOUtils.h"
 
 #include "config.h"   // from libevent, for event.h
 //#include "event_msgqueue.h"
@@ -70,23 +70,6 @@ struct event_base * EventArg :: getEventBase() const {
 	return mEventBase;
 }
 
-/*
-void * SP_EventArg :: getResponseQueue() const
-{
-	return mResponseQueue;
-}
-
-SP_BlockingQueue * SP_EventArg :: getInputResultQueue() const
-{
-	return mInputResultQueue;
-}
-
-SP_BlockingQueue * SP_EventArg :: getOutputResultQueue() const
-{
-	return mOutputResultQueue;
-}
-*/
-
 SessionManager * EventArg :: getSessionManager() const
 {
 	return mSessionManager;
@@ -119,7 +102,8 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 		return;
 	}
 
-	if( IOUtils::setNonblock( clientFD ) < 0 ) {
+	//set nonblock
+	if( IOUtils::setBlock( clientFD, 0 ) < 0 ) {
 		GLOGE("failed to set client socket non-blocking\n" );
 	}
 

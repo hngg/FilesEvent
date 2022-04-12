@@ -1,14 +1,10 @@
 
 
-#ifndef __eventcall_hpp__
-#define __eventcall_hpp__
-/*
-class SP_HandlerFactory;
-class SP_BlockingQueue;
-class SP_Message;
-*/
+#ifndef __eventcall_h__
+#define __eventcall_h__
 
-#include "TaskBase.hpp"
+
+#include "TaskBase.h"
 
 class SP_IOChannelFactory;
 

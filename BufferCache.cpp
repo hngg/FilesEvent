@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "BufferCache.hpp"
+#include "BufferCache.h"
 
 #include "config.h"
 #include "event.h"

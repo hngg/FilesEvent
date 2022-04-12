@@ -10,15 +10,11 @@
 #include <signal.h>
 #include <netinet/tcp.h>
 
-#include "TcpServer.hpp"
-
-
-#include "Session.hpp"
-
-#include "IOUtils.hpp"
+#include "TcpServer.h"
+#include "Session.h"
+#include "IOUtils.h"
 
 #include "config.h"
-
 #include "basedef.h"
 
 //#include "event_msgqueue.h"
@@ -86,8 +82,8 @@ void TcpServer :: shutdown() {
 	event_del( &mEvAccept);
 	if(mListenFD>0) {
 		close(mListenFD);
-		mListenFD = 0;
 		GLOGW("close listenid:%d", mListenFD);
+		mListenFD = -1;
 	}
 }
 

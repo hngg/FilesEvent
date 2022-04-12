@@ -10,7 +10,7 @@
 #include <pthread.h>
 
 
-#include "ActorStation.hpp"
+#include "ActorStation.h"
 #include "basedef.h"
 
 	ActorStation :: ActorStation( )
@@ -125,8 +125,9 @@
 		return ret;
 	}
 
-	void ActorStation :: sigHandler( int, short, void * arg ) {
+	void ActorStation :: sigHandler( int fd, short event, void * arg ) {
 		ActorStation * station = (ActorStation*)arg;
 		station->shutdown();
+		GLOGW("sigHandler fd:%d event:%d.", fd, event);
 	}
 

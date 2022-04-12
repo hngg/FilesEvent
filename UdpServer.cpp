@@ -10,15 +10,11 @@
 #include <signal.h>
 #include <netinet/tcp.h>
 
-#include "UdpServer.hpp"
-
-
-#include "Session.hpp"
-
-#include "IOUtils.hpp"
+#include "UdpServer.h"
+#include "Session.h"
+#include "IOUtils.h"
 
 #include "config.h"
-
 #include "basedef.h"
 
 //#include "event_msgqueue.h"

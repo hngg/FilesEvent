@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "IOUtils.hpp"
+#include "IOUtils.h"
 #include "basedef.h"
 
 #define  MAX_MTU 1400
@@ -26,15 +26,26 @@ void IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
 	#endif
 }
 
-int IOUtils :: setNonblock( int fd )
+/**
+ * blocking:
+ * 1->block
+ * 0->nonblock
+ */
+int IOUtils :: setBlock( int fd, int blocking)
 {
 	int flags;
 
 	flags = fcntl( fd, F_GETFL );
-	if( flags < 0 ) return flags;
+	if( flags < 0 ) 
+		return flags;
 
-	flags |= O_NONBLOCK;
-	if( fcntl( fd, F_SETFL, flags ) < 0 ) return -1;
+	if(blocking)
+		flags &= ~O_NONBLOCK;
+	else
+		flags |= O_NONBLOCK;
+		
+	if( fcntl( fd, F_SETFL, flags ) < 0 ) 
+		return -1;
 
     // if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0)|O_NONBLOCK) == -1)
     // {
@@ -44,29 +55,74 @@ int IOUtils :: setNonblock( int fd )
 	return 0;
 }
 
-int IOUtils :: setBlock( int fd )
-{
-	int flags;
-
-	flags = fcntl( fd, F_GETFL );
-	if( flags < 0 ) return flags;
-
-	flags &= ~O_NONBLOCK;
-	if( fcntl( fd, F_SETFL, flags ) < 0 ) return -1;
-
-	return 0;
-}
-
-int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdelay)
+//0 nonblock, 1 block
+int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int tcpdelay )
 {
 	int ret = 0;
-    	int sockid = socket(AF_INET, SOCK_STREAM, 0);
-    	if(sockid < 0) {
-    		GLOGE("socket() failure val:%d", sockid);
-    		return -1;
-    	}
+
+	int listenFd = socket( AF_INET, SOCK_STREAM, 0 );
+	if( listenFd < 0 ) {
+		GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
+		return -errno;
+	}
+
+	//0 is set socket nonblock
+	if( setBlock( listenFd, 0) < 0 ) {
+		GLOGE( "failed to set socket to non-blocking" );
+	}
+	
+	int flags = 1;
+	if( setsockopt( listenFd, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof( flags ) ) < 0 ) {
+		GLOGE( "failed to set setsock to reuseaddr" );
+	}
 
 
+	if( 0 == tcpdelay ) {
+		int flags = 1;
+		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
+			GLOGE("failed to set socket to nodelay" );
+		}
+	}
+
+	struct sockaddr_in addr;
+
+	memset( &addr, 0, sizeof( addr ) );
+	addr.sin_family 		= AF_INET;
+	addr.sin_port 			= htons( bindPort );
+	addr.sin_addr.s_addr 	= inet_addr(ip);//INADDR_ANY;
+
+	if( bind( listenFd, (struct sockaddr*)&addr, sizeof( addr ) ) < 0 ) {
+		GLOGE("bind failed, errno %d, %s", errno, strerror( errno ) );
+		return -errno;
+	}
+	// if( '\0' != *ip ) {
+	// 	if( 0 != inet_aton( ip, &addr.sin_addr ) ) {
+	// 		GLOGE("failed to convert %s to inet_addr", ip );
+	// 		ret = -1;
+	// 	}
+	// }
+
+
+	if( ::listen( listenFd, 5 ) < 0 ) {
+		close( listenFd );
+		GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
+		return -errno;
+	}
+
+	*outListenId = listenFd;
+	GLOGI("Listen on port [%d]", bindPort );
+
+	return ret;
+}
+
+int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, int tcpdelay)
+{
+	int ret = 0;
+	int sockid = socket(AF_INET, SOCK_STREAM, 0);
+	if(sockid < 0) {
+		GLOGE("socket() failure val:%d", sockid);
+		return -1;
+	}
 
 	if( 0 == tcpdelay ) {
 		int flags = 1;
@@ -76,20 +132,20 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int * fd, int tcpdel
 		}
 	}
 
-    	struct sockaddr_in addr;
-    
-    	addr.sin_family = AF_INET;
-    	addr.sin_port   = htons(destport);
-    	addr.sin_addr.s_addr = inet_addr(destip);
+	struct sockaddr_in addr;
 
-    	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) {
-    		GLOGE("connect() failure ret:%d\n", ret);
-    	}
-	if( 0 != ret && sockid >= 0 ) close( sockid );
+	addr.sin_family = AF_INET;
+	addr.sin_port   = htons(destport);
+	addr.sin_addr.s_addr = inet_addr(destip);
 
-	if( 0 == ret ) {
-		* fd = sockid;
+	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) {
+		close( sockid );
+		GLOGE("bind failed, ret:%d errno %d, %s ", ret, errno, strerror( errno ) );
+		return -errno;
 	}
+
+	*outConnectId = sockid;
+	GLOGI("connect %s %d success socketid:%d", destip, destport, sockid);
 
 	return ret;
 }
@@ -108,75 +164,6 @@ int IOUtils :: tcpSendData(int fd, char*data, int len){
 		}
 	}
 	return iRet;
-}
-
-int IOUtils :: tcpListen( const char * ip, int port, int * fd, int blocking )
-{
-	int ret = 0;
-
-	int listenFd = socket( AF_INET, SOCK_STREAM, 0 );
-	if( listenFd < 0 ) {
-		GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
-		ret = -1;
-	}
-
-	if( 0 == ret && 0 == blocking ) {
-		if( setNonblock( listenFd ) < 0 ) {
-			GLOGE( "failed to set socket to non-blocking" );
-			ret = -1;
-		}
-	}
-
-	if( 0 == ret ) {
-		int flags = 1;
-		if( setsockopt( listenFd, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof( flags ) ) < 0 ) {
-			GLOGE( "failed to set setsock to reuseaddr" );
-			ret = -1;
-		}
-		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags) ) < 0 ) {
-			GLOGE( "failed to set socket to nodelay" );
-			ret = -1;
-		}
-	}
-
-	struct sockaddr_in addr;
-
-	if( 0 == ret ) {
-		memset( &addr, 0, sizeof( addr ) );
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons( port );
-
-		addr.sin_addr.s_addr = INADDR_ANY;
-		if( '\0' != *ip ) {
-			if( 0 != inet_aton( ip, &addr.sin_addr ) ) {
-				GLOGE("failed to convert %s to inet_addr", ip );
-				ret = -1;
-			}
-		}
-	}
-
-	if( 0 == ret ) {
-		if( bind( listenFd, (struct sockaddr*)&addr, sizeof( addr ) ) < 0 ) {
-			GLOGE("bind failed, errno %d, %s", errno, strerror( errno ) );
-			ret = -1;
-		}
-	}
-
-	if( 0 == ret ) {
-		if( ::listen( listenFd, 5 ) < 0 ) {
-			GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
-			ret = -1;
-		}
-	}
-
-	if( 0 != ret && listenFd >= 0 ) close( listenFd );
-
-	if( 0 == ret ) {
-		* fd = listenFd;
-		GLOGI("Listen on port [%d]", port );
-	}
-
-	return ret;
 }
 
 void setPortReuse(int listener) 
