@@ -26,12 +26,12 @@ OBJECTS = net/buffer.o \
 			net/evbuffer.o \
 			net/signal.o \
 			net/log.o \
-			net/net_utils.o \
+			common/net_utils.o \
 			BufferCache.o \
 			IOUtils.o \
 			Session.o \
-			EventCall.o \
-			ActorStation.o \
+			EventActor.o \
+			ReactorStation.o \
 			TaskBase.o \
 			TaskFileSend.o \
 			TaskFileRecv.o

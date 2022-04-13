@@ -9,7 +9,7 @@
 
 #include "event.h"
 
-#include "EventCall.h"
+#include "EventActor.h"
 #include "TaskBase.h"
 
 // half-sync/half-async thread pool server
@@ -18,7 +18,7 @@ public:
 	UdpServer( const char * bindIP, int port );
 	~UdpServer();
 
-	int registerEvent(const EventArg& evarg);
+	int registerEvent(const EventGlobal& evarg);
 	void shutdown();
 
 	void setRealView(int sockId, void*surface);

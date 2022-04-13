@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #include "TcpServer.h"
-#include "ActorStation.h"
+#include "ReactorStation.h"
 
 
 int main( int argc, char * argv[] )
@@ -46,7 +46,7 @@ int main( int argc, char * argv[] )
 
 	int count = 0;
 	while(1) {
-		ActorStation station;
+		ReactorStation station;
 		station.startup();
 
 		TcpServer server( "127.0.0.1", port );

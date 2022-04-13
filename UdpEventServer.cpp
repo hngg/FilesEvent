@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #include "UdpServer.h"
-#include "ActorStation.h"
+#include "ReactorStation.h"
 
 #define PORT 31000
 
@@ -45,7 +45,7 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	ActorStation station;
+	ReactorStation station;
 	station.startup();
 
 	UdpServer server( "", port );

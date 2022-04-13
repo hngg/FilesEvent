@@ -59,19 +59,19 @@ void UdpServer :: setReqQueueSize( int reqQueueSize, const char * refusedMsg )
 	mRefusedMsg = strdup( refusedMsg );
 }
 
-int UdpServer :: registerEvent(const EventArg& evarg) {
+int UdpServer :: registerEvent(const EventGlobal& evarg) {
 	int ret = 0;
 
 	ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
 	GLOGW("create listenid:%d ret:%d\n", mListenFD, ret);
 
 	memset( &mAcceptArg, 0, sizeof( AcceptArg_t ) );
-	mAcceptArg.mEventArg 		= (EventArg*)&evarg;
+	mAcceptArg.mEventArg 		= (EventGlobal*)&evarg;
 	mAcceptArg.mReqQueueSize 	= mReqQueueSize;
 	mAcceptArg.mMaxConnections 	= mMaxConnections;
 	mAcceptArg.mRefusedMsg 		= mRefusedMsg;
 
-	event_set( &mEvAccept, mListenFD, EV_READ|EV_PERSIST, EventCall::onAccept, &mAcceptArg );
+	event_set( &mEvAccept, mListenFD, EV_READ|EV_PERSIST, EventActor::onAccept, &mAcceptArg );
 	event_base_set( evarg.getEventBase(), &mEvAccept );
 	event_add( &mEvAccept, NULL );
 
@@ -89,7 +89,7 @@ void UdpServer :: shutdown() {
 
 void UdpServer :: setRealView(int sockId, void*surface) {
 	if(mAcceptArg.mEventArg) {
-		EventArg *arg = mAcceptArg.mEventArg;
+		EventGlobal *arg = mAcceptArg.mEventArg;
 		SessionManager * manager = arg->getSessionManager();
 		manager->setRealView(sockId, surface);
 	}

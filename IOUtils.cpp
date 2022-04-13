@@ -76,7 +76,6 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 		GLOGE( "failed to set setsock to reuseaddr" );
 	}
 
-
 	if( 0 == tcpdelay ) {
 		int flags = 1;
 		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {

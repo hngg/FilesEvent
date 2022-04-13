@@ -7,7 +7,7 @@
 
 #include "TaskFileSend.h"
 #include "BufferCache.h"
-#include "EventCall.h"
+#include "EventActor.h"
 
 #include "event.h"
 #include "protocol.h"
@@ -295,7 +295,7 @@
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"tmend", acValue, &lValueLen);
 						GLOGE("tmend:%d",atoi(acValue));
-						EventCall::addEvent( mSess, EV_WRITE, -1 );
+						EventActor::addEvent( mSess, EV_WRITE, -1 );
 					}
 					else if(strcmp(acValue, "setpause") == 0) {
 						memset(acValue, 0, 256);
@@ -305,7 +305,7 @@
 					}
 					else if(strcmp(acValue, "send") == 0) {
 						mbSendingData = true;
-						EventCall::addEvent( mSess, EV_WRITE, -1 );
+						EventActor::addEvent( mSess, EV_WRITE, -1 );
 					}
 				}
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);

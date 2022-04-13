@@ -10,44 +10,41 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 
-#include "EventCall.h"
+#include "EventActor.h"
 #include "Session.h"
 #include "BufferCache.h"
 
 #include "IOUtils.h"
 
 #include "config.h"   // from libevent, for event.h
-//#include "event_msgqueue.h"
 #include "event.h"
 #include "basedef.h"
 
 #define TIMEOUT_US 1000000
 
-EventArg :: EventArg()
+EventGlobal :: EventGlobal()
 		:mTimeout(0)
 		,mEventBase(NULL)
 		,mSessionManager(NULL) {
 }
 
-EventArg :: EventArg( int timeout )
+EventGlobal :: EventGlobal( int timeout )
 			:mTimeout(timeout)
 			,mEventBase(NULL)
 			,mSessionManager(NULL) {
 }
 
-EventArg :: ~EventArg()
+EventGlobal :: ~EventGlobal()
 {
-	//delete mInputResultQueue;
-	//delete mOutputResultQueue;
-
-	delete mSessionManager;
-	mSessionManager = NULL;
-
-	//msgqueue_destroy( (struct event_msgqueue*)mResponseQueue );
-	//event_base_free( mEventBase );
+	event_destroy();
+	//do clean
+	if(mSessionManager) {
+		delete mSessionManager;
+		mSessionManager = NULL;
+	}
 }
 
-int EventArg ::Create() {
+int EventGlobal ::Create() {
 	if(mEventBase==NULL)
 		mEventBase = (struct event_base*)event_init();
 
@@ -57,8 +54,10 @@ int EventArg ::Create() {
 	return 0;
 }
 
-int EventArg ::Destroy() {
+int EventGlobal ::Destroy()
+{
 	event_destroy();
+	//do clean
 	if(mSessionManager!=NULL) {
 		delete mSessionManager;
 		mSessionManager = NULL;
@@ -66,35 +65,36 @@ int EventArg ::Destroy() {
 	return 0;
 }
 
-struct event_base * EventArg :: getEventBase() const {
+struct event_base * EventGlobal :: getEventBase() const 
+{
 	return mEventBase;
 }
 
-SessionManager * EventArg :: getSessionManager() const
+SessionManager * EventGlobal :: getSessionManager() const
 {
 	return mSessionManager;
 }
 
-void EventArg :: setTimeout( int timeout )
+void EventGlobal :: setTimeout( int timeout )
 {
 	mTimeout = timeout;
 }
 
-int EventArg :: getTimeout() const
+int EventGlobal :: getTimeout() const
 {
 	return mTimeout;
 }
 
 //-------------------------------Event callback------------------------------------
 
-void EventCall :: onAccept( int fd, short events, void * arg )
+void EventActor :: onAccept( int fd, short events, void * arg )
 {
 	int clientFD;
 	struct sockaddr_in clientAddr;
 	socklen_t clientLen = sizeof( clientAddr );
 	GLOGW( "accept id:%d\n",fd);
 	AcceptArg_t * acceptArg = (AcceptArg_t*)arg;
-	EventArg * eventArg = acceptArg->mEventArg;
+	EventGlobal * eventArg = acceptArg->mEventArg;
 
 	clientFD = accept( fd, (struct sockaddr *)&clientAddr, &clientLen );
 	if( -1 == clientFD ) {
@@ -161,7 +161,7 @@ void EventCall :: onAccept( int fd, short events, void * arg )
 
 }
 
-void EventCall :: onRead( int fd, short events, void * arg )
+void EventActor :: onRead( int fd, short events, void * arg )
 {
 	Session * session = (Session*)arg;
 	session->setReading( 0 );
@@ -192,12 +192,12 @@ void EventCall :: onRead( int fd, short events, void * arg )
 	addEvent( session, EV_READ, fd );
 }
 
-void EventCall :: onWrite( int fd, short events, void * arg )
+void EventActor :: onWrite( int fd, short events, void * arg )
 {
 	int ret = 0;
 	Session * session = (Session*)arg;
 
-	EventArg * eventArg = (EventArg*)session->getArg();
+	EventGlobal * eventArg = (EventGlobal*)session->getArg();
 
 	session->setWriting( 0 );
 
@@ -293,7 +293,7 @@ void EventCall :: onWrite( int fd, short events, void * arg )
 */
 }
 
-void EventCall :: onTimer( int fd, short events, void * arg )
+void EventActor :: onTimer( int fd, short events, void * arg )
 {
 	Session * session = (Session*)arg;
 	int count = session->setHeartBeat();
@@ -305,7 +305,7 @@ void EventCall :: onTimer( int fd, short events, void * arg )
 	evtimer_add(session->getTimeEvent(), &timeout);
 }
 
-void EventCall :: onResponse( void * queueData, void * arg )
+void EventActor :: onResponse( void * queueData, void * arg )
 {
 	//SP_Response * response = (SP_Response*)queueData;
 	//EventArg * eventArg = (EventArg*)arg;
@@ -315,9 +315,9 @@ void EventCall :: onResponse( void * queueData, void * arg )
 	//u_int16_t seq = 0;
 }
 
-void EventCall :: addEvent( Session * session, short events, int fd )
+void EventActor :: addEvent( Session * session, short events, int fd )
 {
-	EventArg * eventArg = (EventArg*)session->getArg();
+	EventGlobal * eventArg = (EventGlobal*)session->getArg();
 
 	if( ( events & EV_WRITE ) && (0 == session->getWriting()) ) {
 		session->setWriting( 1 );
@@ -400,7 +400,7 @@ void EventHelper :: worker( void * arg )
 
 void EventHelper :: doError( Session * session )
 {
-	EventArg * eventArg = (EventArg *)session->getArg();
+	EventGlobal * eventArg = (EventGlobal *)session->getArg();
 
 	event_del( session->getWriteEvent() );
 	event_del( session->getReadEvent() );

@@ -12,7 +12,7 @@
 
 #include "TcpServer.h"
 #include "TcpClient.h"
-#include "ActorStation.h"
+#include "ReactorStation.h"
 
 
 void usage(char*exename) {
@@ -55,7 +55,7 @@ int main( int argc, char * argv[] )
 	}
 
 
-	ActorStation station;
+	ReactorStation station;
 	station.startup();
 
 	TcpClient client;

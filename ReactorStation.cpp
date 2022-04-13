@@ -10,30 +10,30 @@
 #include <pthread.h>
 
 
-#include "ActorStation.h"
+#include "ReactorStation.h"
 #include "basedef.h"
 
-	ActorStation :: ActorStation( )
+	ReactorStation :: ReactorStation( )
 		:mIsShutdown(0)
 		,mIsRunning(0)
 		,mTimeout(60) {
 	}
 
-	ActorStation :: ~ActorStation() {
+	ReactorStation :: ~ReactorStation() {
 		//mEventArg.Destroy();
 		GLOGV("ActorStation Destroy.");
 	}
 
-	void ActorStation :: setTimeout( int timeout )
+	void ReactorStation :: setTimeout( int timeout )
 	{
 		mTimeout = timeout > 0 ? timeout : mTimeout;
 	}
 
-	const EventArg&  ActorStation :: getEventArg() {
+	const EventGlobal&  ReactorStation :: getEventArg() {
 		return mEventArg;
 	}
 
-	int ActorStation :: startup() {
+	int ReactorStation :: startup() {
 		if(isRunning()==0) {
 			mIsShutdown = 0;
 			mEventArg.setTimeout(mTimeout);
@@ -44,7 +44,7 @@
 		return -1;
 	}
 
-	void ActorStation :: shutdown() {
+	void ReactorStation :: shutdown() {
 		if(isRunning()==1) {
 			mIsShutdown = 1;
 			struct timeval tv;
@@ -52,15 +52,15 @@
 			tv.tv_usec=10;
 			event_loopexit(&tv);
 
-			GLOGV("ActorStation shutdown function.");
+			GLOGV("ReactorStation shutdown function.");
 		}
 	}
 
-	int ActorStation :: isRunning() {
+	int ReactorStation :: isRunning() {
 		return mIsRunning;
 	}
 
-	int ActorStation :: run() {
+	int ReactorStation :: run() {
 		int ret = -1;
 
 		pthread_attr_t attr;
@@ -81,8 +81,8 @@
 		return ret;
 	}
 
-	void * ActorStation :: eventLoop( void * arg ) {
-		ActorStation * station = (ActorStation*)arg;
+	void * ReactorStation :: eventLoop( void * arg ) {
+		ReactorStation * station = (ReactorStation*)arg;
 
 		station->mIsRunning = 1;
 
@@ -93,7 +93,7 @@
 		return NULL;
 	}
 
-	int ActorStation :: start() {
+	int ReactorStation :: start() {
 		/* Don't die with SIGPIPE on remote read shutdown. That's dumb. */
 		signal( SIGPIPE, SIG_IGN );
 
@@ -117,7 +117,7 @@
 			}
 
 			mEventArg.Destroy();
-			GLOGV("ActorStation is shutdown.");
+			GLOGV("ReactorStation is shutdown.");
 
 			signal_del( &evSigTerm );
 			signal_del( &evSigInt );
@@ -125,8 +125,8 @@
 		return ret;
 	}
 
-	void ActorStation :: sigHandler( int fd, short event, void * arg ) {
-		ActorStation * station = (ActorStation*)arg;
+	void ReactorStation :: sigHandler( int fd, short event, void * arg ) {
+		ReactorStation * station = (ReactorStation*)arg;
 		station->shutdown();
 		GLOGW("sigHandler fd:%d event:%d.", fd, event);
 	}

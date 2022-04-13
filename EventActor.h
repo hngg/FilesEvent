@@ -1,62 +1,47 @@
 
 
-#ifndef __eventcall_h__
-#define __eventcall_h__
+#ifndef __event_actor_h__
+#define __event_actor_h__
 
 
 #include "TaskBase.h"
 
-class SP_IOChannelFactory;
-
-
-class SessionManager;
-class Session;
-
 struct event_base;
 
-class EventArg {
+class Session;
+class SessionManager;
+
+class EventGlobal {
 public:
-	EventArg();
-	EventArg( int timeout );
-	~EventArg();
+	EventGlobal();
+	EventGlobal( int timeout );
+	~EventGlobal();
 	int Create();
 	int Destroy();
 
 	struct event_base * getEventBase() const;
-/*
-	void * getResponseQueue() const;
-	SP_BlockingQueue * getInputResultQueue() const;
-	SP_BlockingQueue * getOutputResultQueue() const;
-*/
+
 	SessionManager * getSessionManager() const;
 
 	void setTimeout( int timeout );
-	int getTimeout() const;
+	int  getTimeout() const;
 
 private:
 	struct event_base * mEventBase;
-/*
-	void * mResponseQueue;
-	SP_BlockingQueue * mInputResultQueue;
-	SP_BlockingQueue * mOutputResultQueue;
-*/
 	SessionManager * mSessionManager;
-
 	int mTimeout;
 };
 
 typedef struct tag_AcceptArg {
-	EventArg * mEventArg;
+	EventGlobal * mEventArg;
 
-	//SP_HandlerFactory * mHandlerFactory;
-	//SP_IOChannelFactory * mIOChannelFactory;
 	int mReqQueueSize;
 	int mMaxConnections;
 	char * mRefusedMsg;
 } AcceptArg_t;
 
 
-class EventCall {
+class EventActor {
 
 	public:
 		static void onAccept( int fd, short events, void * arg );
@@ -68,8 +53,8 @@ class EventCall {
 		static void onResponse( void * queueData, void * arg );
 
 	private:
-		EventCall();
-		~EventCall();
+		EventActor();
+		~EventActor();
 };
 
 class EventHelper {

@@ -32,10 +32,10 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/evbuffer.c \
 				net/signal.c \
 				net/log.c \
-				net/net_utils.c \
-				ActorStation.cpp \
+				common/net_utils.c \
+				ReactorStation.cpp \
 				BufferCache.cpp \
-				EventCall.cpp \
+				EventActor.cpp \
 				IOUtils.cpp \
 				Session.cpp \
 				TaskBase.cpp \

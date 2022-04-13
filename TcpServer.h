@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventCall.h"
+#include "EventActor.h"
 #include "TaskBase.h"
 
 #include "event.h"
@@ -20,7 +20,7 @@ public:
 	TcpServer( const char * bindIP, int port );
 	~TcpServer();
 
-	int registerEvent(const EventArg& evarg);
+	int registerEvent(const EventGlobal& evarg);
 	void shutdown();
 
 	void setRealView(int sockId, void*surface);

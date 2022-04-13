@@ -1,5 +1,5 @@
-#ifndef __actorstation_h__
-#define __actorstation_h__
+#ifndef __reactorstation_h__
+#define __reactorstation_h__
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -7,16 +7,16 @@
 
 #include "event.h"
 
-#include "EventCall.h"
+#include "EventActor.h"
 #include "TaskBase.h"
 
 
-class ActorStation {
+class ReactorStation {
 	public:
-		ActorStation(  );
-		~ActorStation();
+		ReactorStation( );
+		~ReactorStation();
 
-		const EventArg& getEventArg();
+		const EventGlobal& getEventArg();
 
 		int startup();
 		int isRunning();
@@ -26,12 +26,12 @@ class ActorStation {
 		void setTimeout( int timeout );
 
 	private:
-		static void * eventLoop( void * arg );
 		int start();
 		int run();
+		static void *eventLoop( void * arg );
 		static void sigHandler( int, short, void * arg );
 
-		EventArg 	mEventArg;
+		EventGlobal mEventArg;
 		int mIsShutdown;
 		int mIsRunning;
 		int mTimeout;

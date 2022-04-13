@@ -9,16 +9,6 @@
 
 #include "protocol.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#ifdef HAV_FFMPEG
-	#include "libavformat/avformat.h"
-#endif
-#ifdef __cplusplus
-};
-#endif
 
 #define PACKET_BUFFER_END            (unsigned int)0x00000000
 #define MAX_RTP_PKT_LENGTH     1360
@@ -96,14 +86,6 @@ typedef struct
   unsigned short lost_packets;  //! true, if packet loss is detected
 } NALU_t;
 
-
-FILE* 	OpenBitstreamFile (const char *filename);
-void  	CloseBitstreamFile(FILE *file);
-
-NALU_t 	*AllocNALU(int buffersize);
-void 	FreeNALU(NALU_t *n);
-int 	GetAnnexbNALU (FILE *file, NALU_t *nalu);
-void 	dump(NALU_t *n);
 
 #ifndef  MAX_LEN
 #define  MAX_LEN 1300
@@ -193,93 +175,6 @@ struct tagFileProcBuffer {
 	}
 };
 
-struct tagRealSendBuffer {
-	char cmmd[CMD_LEN];
-	bool bProcCmmd;
-	int  hasProcLen;
-	int  totalLen;	//1500 is cmd len
-	int  dataLen;
-	char*data;
-
-	tagRealSendBuffer() {
-		data 		= NULL;
-		totalLen 	= 0;
-		dataLen 	= 0;
-		hasProcLen 	= 0;
-		bProcCmmd 	= true;
-	}
-
-	void reset() {
-		//std::lock_guard<std::mutex> lk(mut);
-		memset(cmmd, 0, CMD_LEN);
-		if(data) {
-		}
-		hasProcLen 	= 0;
-		totalLen 	= 0;
-		dataLen		= 0;
-		bProcCmmd 	= true;
-	}
-
-	bool isSendVideo() {
-		return bProcCmmd==false;
-	}
-
-	void setToVideo() {
-		bProcCmmd	= false;
-		hasProcLen 	= 0;
-		totalLen 	= dataLen;
-	}
-};
-
-struct tagNALSendBuffer {
-	char cmmd[CMD_LEN];
-	bool bProcCmmd;
-	int  hasProcLen;
-	int  totalLen;//1500 is cmd len
-	int  dataLen;
-	NALU_t 	*data;
-
-	tagNALSendBuffer() {
-		data 		= NULL;
-		totalLen 	= 0;
-		dataLen 	= 0;
-		hasProcLen 	= 0;
-		bProcCmmd 	= true;
-	}
-
-	void reset() {
-		//std::lock_guard<std::mutex> lk(mut);
-		memset(cmmd, 0, CMD_LEN);
-		if(data) {
-		}
-		hasProcLen 	= 0;
-		totalLen 	= 0;
-		dataLen		= 0;
-		bProcCmmd 	= true;
-	}
-
-	void createMem(int len) {
-		if(data==NULL)
-			data  = AllocNALU(len);
-	}
-
-	void releaseMem() {
-		if(data) {
-			FreeNALU(data);
-			data=NULL;
-		}
-	}
-
-	bool isSendVideo() {
-		return bProcCmmd==false;
-	}
-	void setToVideo() {
-		bProcCmmd	= false;
-		hasProcLen 	= 0;
-		totalLen 	= dataLen;
-	}
-};
-
 struct tagFileSendBuffer {
 
 	bool bProcCmmd;
@@ -330,49 +225,6 @@ struct tagFileSendBuffer {
 		totalLen 	= dataLen;
 	}
 };
-
-
-#ifdef HAV_FFMPEG
-//send data struct
-struct tagSendBuffer {
-	bool bSendCmd;
-	int  hasSendLen;
-	int  totalLen;
-	AVPacket avpack;
-	char cmd[1500];
-	mutable std::mutex mut;
-
-	tagSendBuffer() {
-		memset(&avpack, 0, sizeof(AVPacket));
-	}
-
-	void reset() {
-		std::lock_guard<std::mutex> lk(mut);
-		if(bSendCmd) memset(cmd, 0, 1500);
-		hasSendLen 	= 0;
-		totalLen 	= 0;
-		//av_free_packet(&avpack);
-		if(avpack.size>0)
-			av_packet_unref(&avpack);
-		memset(&avpack, 0, sizeof(AVPacket));
-		avpack.size = 0;
-		bSendCmd 	= true;
-	}
-
-	bool isSendVideo() {
-		return avpack.size>0;
-	}
-
-	void setToVideo() {
-		bSendCmd	= false;
-		hasSendLen 	= 0;
-		totalLen 	= avpack.size;
-		memset(cmd,0, 1500);
-	}
-};
-#endif
-
-//extern FILE *bits;
 
 
 #endif

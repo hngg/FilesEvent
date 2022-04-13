@@ -1,7 +1,7 @@
 
 
-#ifndef __ioutils_hpp__
-#define __ioutils_hpp__
+#ifndef __ioutils_h__
+#define __ioutils_h__
 
 #include <netinet/in.h>
 

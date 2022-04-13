@@ -1,7 +1,6 @@
 #include "TaskBase.h"
 
 
-
 	TaskBase::TaskBase( Sid_t sid )
 			:mSid(sid)
 			,mHeartCount(0)

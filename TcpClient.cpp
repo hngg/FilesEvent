@@ -86,7 +86,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 int TcpClient :: disConnect() {
 	if(mSockId > 0 && mSession) {
 
-		EventArg * eventArg = (EventArg*)mSession->getArg();
+		EventGlobal * eventArg = (EventGlobal*)mSession->getArg();
 
 		SessionManager *manager = eventArg->getSessionManager();
 
@@ -106,7 +106,7 @@ int TcpClient :: disConnect() {
 	return 0;
 }
 
-int TcpClient :: registerEvent(const EventArg& evarg) {
+int TcpClient :: registerEvent(const EventGlobal& evarg) {
 
 	if(mSession!=NULL) {
 
@@ -114,8 +114,8 @@ int TcpClient :: registerEvent(const EventArg& evarg) {
 		evarg.getSessionManager()->put( mSid.mKey, mSession, &mSid.mSeq );
 		mSession->setArg( (void*)&evarg );
 
-		event_set( mSession->getReadEvent(), mSockId, EV_READ|EV_PERSIST, EventCall::onRead, mSession );
-		EventCall::addEvent( mSession, EV_READ, mSockId );
+		event_set( mSession->getReadEvent(), mSockId, EV_READ|EV_PERSIST, EventActor::onRead, mSession );
+		EventActor::addEvent( mSession, EV_READ, mSockId );
 
 		//event_set( mSession->getWriteEvent(), mSockId, EV_WRITE, EventCall::onWrite, mSession );
 		//EventCall::addEvent( mSession, EV_WRITE, mSockId );

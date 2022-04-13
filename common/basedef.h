@@ -45,6 +45,14 @@
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
 
+#ifndef false
+#define false	0
+#endif
+
+#ifndef true
+#define true	1
+#endif
+
 //#define NET_FLAT	0xfefdfcfb
 //
 //typedef struct tagNET_CMD

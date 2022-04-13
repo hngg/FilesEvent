@@ -1,5 +1,5 @@
 
-#include "ActorStation.h"
+#include "ReactorStation.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
 // #include "RealCameraCodec.h"
@@ -15,7 +15,7 @@
 JavaVM*		 g_javaVM		= NULL;
 jclass 		 g_mClass		= NULL;
 
-ActorStation mStatiion;
+ReactorStation mStatiion;
 TcpClient	 *mpClient		= NULL;
 TcpServer	 *mpServer		= NULL;
 // RealCameraCodec *gRealCam   = NULL;

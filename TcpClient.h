@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventCall.h"
+#include "EventActor.h"
 
 class Session;
 
@@ -21,7 +21,7 @@ public:
 	int connect(const char* destIp, unsigned short destPort, const char*filepath, void *surface); //get h264 show
 	int connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile);
 	int disConnect();
-	int registerEvent(const EventArg& evarg);
+	int registerEvent(const EventGlobal& evarg);
 
 private:
 	int 			mSockId;
