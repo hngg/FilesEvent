@@ -31,15 +31,12 @@ UdpServer :: UdpServer( const char * bindIP, int port )
 	mMaxThreads 	= 64;
 	mReqQueueSize 	= 128;
 	mMaxConnections = 256;
-	mRefusedMsg 	= strdup( "System busy, try again later." );
 }
 
 UdpServer :: ~UdpServer()
 {
-	if( NULL != mRefusedMsg ) free( mRefusedMsg );
-	mRefusedMsg = NULL;
-}
 
+}
 
 void UdpServer :: setMaxThreads( int maxThreads )
 {
@@ -54,24 +51,17 @@ void UdpServer :: setMaxConnections( int maxConnections )
 void UdpServer :: setReqQueueSize( int reqQueueSize, const char * refusedMsg )
 {
 	mReqQueueSize = reqQueueSize > 0 ? reqQueueSize : mReqQueueSize;
-
-	if( NULL != mRefusedMsg ) free( mRefusedMsg );
-	mRefusedMsg = strdup( refusedMsg );
 }
 
-int UdpServer :: registerEvent(const EventGlobal& evarg) {
+int UdpServer :: registerEvent(EventGlobal& evarg) {
 	int ret = 0;
 
 	ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
 	GLOGW("create listenid:%d ret:%d\n", mListenFD, ret);
 
-	memset( &mAcceptArg, 0, sizeof( AcceptArg_t ) );
-	mAcceptArg.mEventArg 		= (EventGlobal*)&evarg;
-	mAcceptArg.mReqQueueSize 	= mReqQueueSize;
-	mAcceptArg.mMaxConnections 	= mMaxConnections;
-	mAcceptArg.mRefusedMsg 		= mRefusedMsg;
+	evarg.setMaxConnections(mMaxConnections);
 
-	event_set( &mEvAccept, mListenFD, EV_READ|EV_PERSIST, EventActor::onAccept, &mAcceptArg );
+	event_set( &mEvAccept, mListenFD, EV_READ|EV_PERSIST, EventActor::onAccept, &evarg );
 	event_base_set( evarg.getEventBase(), &mEvAccept );
 	event_add( &mEvAccept, NULL );
 
@@ -84,14 +74,6 @@ void UdpServer :: shutdown() {
 		close(mListenFD);
 		mListenFD = 0;
 		GLOGW("close listenid:%d\n", mListenFD);
-	}
-}
-
-void UdpServer :: setRealView(int sockId, void*surface) {
-	if(mAcceptArg.mEventArg) {
-		EventGlobal *arg = mAcceptArg.mEventArg;
-		SessionManager * manager = arg->getSessionManager();
-		manager->setRealView(sockId, surface);
 	}
 }
 

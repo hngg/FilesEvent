@@ -1,6 +1,4 @@
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,17 +9,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-//#include "TaskVideoRecv.hpp"
-//#include "TaskVideoSend.hpp"
 
 #include "TaskFileSend.h"
 #include "TaskFileRecv.h"
 #include "Session.h"
-
-#ifdef __ANDROID__
-//#include "TaskVideoRealSend.hpp"
-//#include "VideoDecoder.hpp"
-#endif
 
 
 #include "config.h"
@@ -48,12 +39,17 @@ SessionManager :: SessionManager()
 
 SessionManager :: ~SessionManager()
 {
-	for( int i = 0; i < (int)( sizeof( mArray ) / sizeof( mArray[0] ) ); i++ ) {
-		SessionEntry_t * list = mArray[ i ];
-		if( NULL != list ) {
+	int arrLen = (int)( sizeof( mArray ) / sizeof( mArray[0] ));
+	for( int i = 0; i < arrLen; i++ ) 
+	{
+		SessionEntry_t * list = mArray[i];
+		if( NULL != list ) 
+		{
 			SessionEntry_t * iter = list;
-			for( int i = 0; i < 1024; i++, iter++ ) {
-				if( NULL != iter->mSession ) {
+			for( int i = 0; i < 1024; i++, iter++ ) 
+			{
+				if( NULL != iter->mSession ) 
+				{
 					delete iter->mSession;
 					iter->mSession = NULL;
 				}
@@ -83,7 +79,8 @@ void SessionManager :: put( uint16_t key, Session * session, uint16_t * seq )
 {
 	int row = key / 1024, col = key % 1024;
 
-	if( NULL == mArray[ row ] ) {
+	if( NULL == mArray[ row ] ) 
+	{
 		mArray[ row ] = ( SessionEntry_t * )calloc(1024, sizeof( SessionEntry_t ));
 	}
 
@@ -100,12 +97,15 @@ Session * SessionManager :: get( uint16_t key, uint16_t * seq )
 
 	Session * ret = NULL;
 
-	SessionEntry_t * list = mArray[ row ];
-	if( NULL != list ) {
-		ret = list[ col ].mSession;
-		* seq = list[ col ].mSeq;
-	} else {
-		* seq = 0;
+	SessionEntry_t * list = mArray[row];
+	if( NULL != list ) 
+	{
+		ret  = list[col].mSession;
+		*seq = list[col].mSeq;
+	} 
+	else 
+	{
+		*seq = 0;
 	}
 
 	return ret;
@@ -118,9 +118,11 @@ Session * SessionManager :: remove( uint16_t key, uint16_t * seq )
 	Session * ret = NULL;
 
 	SessionEntry_t * list = mArray[ row ];
-	if( NULL != list ) {
+	if( NULL != list ) 
+	{
 		ret = list[ col ].mSession;
-		if( NULL != seq ) * seq = list[ col ].mSeq;
+		if( NULL != seq ) 
+			*seq = list[ col ].mSeq;
 
 		list[ col ].mSession = NULL;
 		list[ col ].mSeq++;
@@ -316,16 +318,26 @@ Session :: Session( Sid_t sid, short type, char*remoteFile, char*saveFile)
 
 Session :: ~Session()
 {
-	free( mReadEvent );
-	mReadEvent = NULL;
+	if(mReadEvent)
+	{
+		free( mReadEvent );
+		mReadEvent = NULL;
+	}
 
-	free( mWriteEvent );
-	mWriteEvent = NULL;
+	if(mWriteEvent)
+	{
+		free( mWriteEvent );
+		mWriteEvent = NULL;
+	}
 
-	free( mTimeEvent );
-	mTimeEvent = NULL;
+	if(mTimeEvent)
+	{
+		free( mTimeEvent );
+		mTimeEvent = NULL;
+	}
 
-	if(mTaskBase!=NULL) {
+	if(mTaskBase!=NULL) 
+	{
 		delete mTaskBase;
 		mTaskBase = NULL;
 	}
@@ -377,7 +389,7 @@ int Session :: readBuffer() {
 					mHasRecvLen = 0;
 					mbRecvHead  = false;
 
-					GLOGE("Session flag:%08x frameLen:%d ret:%d\n", head->dwFlag, mTotalDataLen, ret);
+					log_error("Session flag:%08x frameLen:%d ret:%d\n", head->dwFlag, mTotalDataLen, ret);
 					//GLOGE("Session flag:%08x ret:%d data:%s", cmdbuf->dwFlag, ret, cmdbuf->lpData);
 					ret = recvPackData();
 				}
@@ -423,10 +435,10 @@ int Session ::recvPackData() {
 			    		dataType = 2;
 		    	}
 		    }
-		    GLOGE("filename:%s cmd:%d dataType:%d\n", acValue, pCmdbuf->dwCmd, dataType);
+		    log_info("filename:%s cmd:%d dataType:%d\n", acValue, pCmdbuf->dwCmd, dataType);
 
 		    if(access(acValue, F_OK)!=0) {
-		    	GLOGE("filename %s is no exist.\n",acValue);
+		    	log_error("filename %s is no exist.\n",acValue);
 		    	return 0;
 		    }
 

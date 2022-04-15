@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "glog.h"
 
 
 #ifdef __cplusplus
@@ -11,36 +12,36 @@
 #endif
 
 
-#ifndef TAG
-#define TAG "@-->"
-#endif
+// #ifndef TAG
+// #define TAG "@-->"
+// #endif
 
-#define  LOGTAG true
-#if LOGTAG
+// #define  LOGTAG true
+// #if LOGTAG
 
-#ifdef __ANDROID__
-	#include <android/log.h>
-	#define GLOGV(...)  __android_log_print(ANDROID_LOG_VERBOSE,TAG,__VA_ARGS__)	//black
-	#define GLOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,	TAG,  __VA_ARGS__)	//blue
-	#define GLOGI(...)  __android_log_print(ANDROID_LOG_INFO,	TAG,  __VA_ARGS__)	//green
-	#define GLOGW(...)  __android_log_print(ANDROID_LOG_WARN,	TAG,  __VA_ARGS__)  //yellow
-	#define GLOGE(...)  __android_log_print(ANDROID_LOG_ERROR,	TAG,  __VA_ARGS__)  //red
-#else
-	//if __linux__
-	#define GLOGD(...)  printf("Filename %s, Function %s, Line %d %s ", __FILE__, __FUNCTION__, __LINE__, TAG); \
-						printf(__VA_ARGS__); \
-						printf("\n");
+// #ifdef __ANDROID__
+// 	#include <android/log.h>
+// 	#define GLOGV(...)  __android_log_print(ANDROID_LOG_VERBOSE,TAG,__VA_ARGS__)	//black
+// 	#define GLOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,	TAG,  __VA_ARGS__)	//blue
+// 	#define GLOGI(...)  __android_log_print(ANDROID_LOG_INFO,	TAG,  __VA_ARGS__)	//green
+// 	#define GLOGW(...)  __android_log_print(ANDROID_LOG_WARN,	TAG,  __VA_ARGS__)  //yellow
+// 	#define GLOGE(...)  __android_log_print(ANDROID_LOG_ERROR,	TAG,  __VA_ARGS__)  //red
+// #else
+// 	//if __linux__
+// 	#define GLOGD(...)  printf("Filename %s, Function %s, Line %d %s ", __FILE__, __FUNCTION__, __LINE__, TAG); \
+// 						printf(__VA_ARGS__); \
+// 						printf("\n");
 
-	#define GLOGB(...)  printf("%s, Line %d %s ", __FILE__, __LINE__, TAG); \
-						printf(__VA_ARGS__); \
-						printf("\n");
-	#define GLOGE GLOGB							
-	#define GLOGI GLOGB
-	#define GLOGW GLOGB
-	#define GLOGV GLOGB
-#endif
+// 	#define GLOGB(...)  printf("%s, Line %d %s ", __FILE__, __LINE__, TAG); \
+// 						printf(__VA_ARGS__); \
+// 						printf("\n");
+// 	#define GLOGE GLOGB							
+// 	#define GLOGI GLOGB
+// 	#define GLOGW GLOGB
+// 	#define GLOGV GLOGB
+// #endif
 
-#endif
+// #endif
 
 typedef unsigned short WORD;
 typedef unsigned long DWORD;

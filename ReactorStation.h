@@ -16,7 +16,7 @@ class ReactorStation {
 		ReactorStation( );
 		~ReactorStation();
 
-		const EventGlobal& getEventArg();
+		EventGlobal& getEventArg();
 
 		int startup();
 		int isRunning();

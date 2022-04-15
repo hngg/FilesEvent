@@ -12,8 +12,8 @@
 class Session;
 
 typedef struct tagSid {
-	uint16_t mKey;//sockid like
-	uint16_t mSeq;//index like
+	uint16_t mKey;	//sockid like
+	uint16_t mSeq;	//index like
 
 	enum {
 		eTimerKey = 0,
@@ -26,7 +26,7 @@ class TaskBase {
 public:
 	TaskBase( Sid_t sid );
 	TaskBase( Sid_t &sid, char*filename);
-	TaskBase(  Session*sess, Sid_t&sid, char*filename);
+	TaskBase( Session*sess, Sid_t&sid, char*filename);
 	virtual ~TaskBase();
 	virtual int setHeartCount();
 	virtual int readBuffer();

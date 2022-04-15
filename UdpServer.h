@@ -18,10 +18,8 @@ public:
 	UdpServer( const char * bindIP, int port );
 	~UdpServer();
 
-	int registerEvent(const EventGlobal& evarg);
+	int registerEvent(EventGlobal& evarg);
 	void shutdown();
-
-	void setRealView(int sockId, void*surface);
 
 	void setMaxConnections( int maxConnections );
 	void setMaxThreads( int maxThreads );
@@ -46,9 +44,7 @@ private:
 	int mMaxThreads;
 	int mMaxConnections;
 	int mReqQueueSize;
-	char * mRefusedMsg;
 
-	AcceptArg_t mAcceptArg;
 	struct event mEvAccept;
 
 //	static void * eventLoop( void * arg );

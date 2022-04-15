@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-
 #include "ReactorStation.h"
 #include "basedef.h"
 
@@ -19,9 +18,10 @@
 		,mTimeout(60) {
 	}
 
-	ReactorStation :: ~ReactorStation() {
-		//mEventArg.Destroy();
-		GLOGV("ActorStation Destroy.");
+	ReactorStation :: ~ReactorStation() 
+	{
+		mEventArg.Destroy();
+		log_warn("ActorStation Destroy.");
 	}
 
 	void ReactorStation :: setTimeout( int timeout )
@@ -29,16 +29,19 @@
 		mTimeout = timeout > 0 ? timeout : mTimeout;
 	}
 
-	const EventGlobal&  ReactorStation :: getEventArg() {
+	EventGlobal&  ReactorStation :: getEventArg() {
 		return mEventArg;
 	}
 
 	int ReactorStation :: startup() {
 		if(isRunning()==0) {
 			mIsShutdown = 0;
-			mEventArg.setTimeout(mTimeout);
+			
 			mEventArg.Create();
+			mEventArg.setTimeout(mTimeout);
+
 			run();
+
 			return 0;
 		}
 		return -1;
@@ -52,7 +55,7 @@
 			tv.tv_usec=10;
 			event_loopexit(&tv);
 
-			GLOGV("ReactorStation shutdown function.");
+			log_warn("ReactorStation shutdown function.");
 		}
 	}
 
@@ -71,13 +74,18 @@
 		pthread_t thread = 0;
 		ret = pthread_create( &thread, &attr, reinterpret_cast<void*(*)(void*)>(eventLoop), this );
 		pthread_attr_destroy( &attr );
-		if( 0 == ret ) {
-			GLOGE( "Thread #%ld has been created to listen.", thread );
-		} else {
+		if( 0 == ret ) 
+		{
+			log_warn( "Thread #%ld has been created to loop.", thread );
+		} 
+		else 
+		{
 			mIsRunning = 0;
-			GLOGE( "Unable to create a thread for TCP server, %s", strerror( errno ) ) ;
+			log_error( "Unable to create a thread for TCP server, %s", strerror( errno ) ) ;
 		}
-		GLOGI("ActorStation run ret:%d", ret);
+
+		log_warn("ActorStation run ret:%d", ret);
+
 		return ret;
 	}
 
@@ -117,7 +125,7 @@
 			}
 
 			mEventArg.Destroy();
-			GLOGV("ReactorStation is shutdown.");
+			log_warn("ReactorStation is shutdown.");
 
 			signal_del( &evSigTerm );
 			signal_del( &evSigInt );
@@ -128,6 +136,7 @@
 	void ReactorStation :: sigHandler( int fd, short event, void * arg ) {
 		ReactorStation * station = (ReactorStation*)arg;
 		station->shutdown();
-		GLOGW("sigHandler fd:%d event:%d.", fd, event);
+		
+		log_error("sigHandler fd:%d event:%d.", fd, event);
 	}
 

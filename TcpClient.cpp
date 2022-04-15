@@ -30,7 +30,7 @@ TcpClient :: ~TcpClient()
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.\n",ret, mSockId);
+	log_warn("connect ret:%d sockid:%d.\n",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setBlock( mSockId, 0 );
@@ -41,7 +41,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort) {
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*filepath) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
+	log_warn("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setBlock( mSockId, 0 );
@@ -52,7 +52,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, void *surface) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
+	log_warn("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setBlock( mSockId, 0 );
@@ -63,7 +63,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, void *surf
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*filepath, void *surface) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
+	log_warn("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setBlock( mSockId, 0 );
@@ -74,7 +74,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile) {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
-	GLOGW("connect ret:%d sockid:%d.",ret, mSockId);
+	log_warn("connect ret:%d sockid:%d.",ret, mSockId);
 	if(ret>=0) {
 		mSid.mKey = mSockId;
 		IOUtils::setBlock( mSockId, 0 );
@@ -87,21 +87,23 @@ int TcpClient :: disConnect() {
 	if(mSockId > 0 && mSession) {
 
 		EventGlobal * eventArg = (EventGlobal*)mSession->getArg();
-
 		SessionManager *manager = eventArg->getSessionManager();
 
+		log_warn("disconnect begin");
 		uint16_t seq;
-		if(manager->get(mSockId, &seq)) {
-			GLOGW("disconnect begin");
+		if(manager->get(mSockId, &seq)) 
+		{
+			
 			manager->remove(mSockId);
 			event_del(mSession->getReadEvent());
 			event_del(mSession->getReadEvent());
 			event_del(mSession->getTimeEvent());
 			close(mSockId);
-			mSockId = 0;
-			GLOGW("disconnect remove session id:%d", mSockId);
+			
+			log_warn("disconnect remove session id:%d", mSockId);
+
+			mSockId = -1;
 		}
-		GLOGW("disConnect sockid:%d.", mSockId);
 	}
 	return 0;
 }
@@ -119,10 +121,10 @@ int TcpClient :: registerEvent(const EventGlobal& evarg) {
 
 		//event_set( mSession->getWriteEvent(), mSockId, EV_WRITE, EventCall::onWrite, mSession );
 		//EventCall::addEvent( mSession, EV_WRITE, mSockId );
-		GLOGW("tcpclient registerEvent mSession done.");
+		log_warn("tcpclient registerEvent mSession done.");
 	}
 	else
-		GLOGE("tcpclient registerEvent mSession is NULL.");
+		log_error("tcpclient registerEvent mSession is NULL.");
 
 	return 0;
 }

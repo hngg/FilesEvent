@@ -62,24 +62,24 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 
 	int listenFd = socket( AF_INET, SOCK_STREAM, 0 );
 	if( listenFd < 0 ) {
-		GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
+		log_error("listen failed, errno %d, %s", errno, strerror( errno ) );
 		return -errno;
 	}
 
 	//0 is set socket nonblock
 	if( setBlock( listenFd, 0) < 0 ) {
-		GLOGE( "failed to set socket to non-blocking" );
+		log_error( "failed to set socket to non-blocking" );
 	}
 	
 	int flags = 1;
 	if( setsockopt( listenFd, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof( flags ) ) < 0 ) {
-		GLOGE( "failed to set setsock to reuseaddr" );
+		log_error( "failed to set setsock to reuseaddr" );
 	}
 
 	if( 0 == tcpdelay ) {
 		int flags = 1;
 		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
-			GLOGE("failed to set socket to nodelay" );
+			log_error("failed to set socket to nodelay" );
 		}
 	}
 
@@ -91,12 +91,12 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 	addr.sin_addr.s_addr 	= inet_addr(ip);//INADDR_ANY;
 
 	if( bind( listenFd, (struct sockaddr*)&addr, sizeof( addr ) ) < 0 ) {
-		GLOGE("bind failed, errno %d, %s", errno, strerror( errno ) );
+		log_error("bind failed, errno %d, %s", errno, strerror( errno ) );
 		return -errno;
 	}
 	// if( '\0' != *ip ) {
 	// 	if( 0 != inet_aton( ip, &addr.sin_addr ) ) {
-	// 		GLOGE("failed to convert %s to inet_addr", ip );
+	// 		log_error("failed to convert %s to inet_addr", ip );
 	// 		ret = -1;
 	// 	}
 	// }
@@ -104,12 +104,12 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 
 	if( ::listen( listenFd, 5 ) < 0 ) {
 		close( listenFd );
-		GLOGE("listen failed, errno %d, %s", errno, strerror( errno ) );
+		log_error("listen failed, errno %d, %s", errno, strerror( errno ) );
 		return -errno;
 	}
 
 	*outListenId = listenFd;
-	GLOGI("Listen on port [%d]", bindPort );
+	log_info("Listen on port [%d]", bindPort );
 
 	return ret;
 }
@@ -119,14 +119,14 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, i
 	int ret = 0;
 	int sockid = socket(AF_INET, SOCK_STREAM, 0);
 	if(sockid < 0) {
-		GLOGE("socket() failure val:%d", sockid);
+		log_error("socket() failure val:%d", sockid);
 		return -1;
 	}
 
 	if( 0 == tcpdelay ) {
 		int flags = 1;
 		if( setsockopt( sockid, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
-			GLOGE("failed to set socket to nodelay" );
+			log_error("failed to set socket to nodelay" );
 			ret = -1;
 		}
 	}
@@ -139,12 +139,12 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, i
 
 	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) {
 		close( sockid );
-		GLOGE("bind failed, ret:%d errno %d, %s ", ret, errno, strerror( errno ) );
+		log_error("bind failed, ret:%d errno %d, %s ", ret, errno, strerror( errno ) );
 		return -errno;
 	}
 
 	*outConnectId = sockid;
-	GLOGI("connect %s %d success socketid:%d", destip, destport, sockid);
+	log_info("connect %s %d success socketid:%d", destip, destport, sockid);
 
 	return ret;
 }

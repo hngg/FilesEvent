@@ -1,7 +1,3 @@
-/*
- * Copyright 2007 Stephen Liu
- * For license terms, see the file COPYING along with this library.
- */
 
 #include <string.h>
 #include <stdio.h>
@@ -9,6 +5,8 @@
 #include <syslog.h>
 #include <signal.h>
 #include <unistd.h>
+
+#include "basedef.h"
 
 #include "TcpServer.h"
 #include "ReactorStation.h"
@@ -46,19 +44,18 @@ int main( int argc, char * argv[] )
 
 	int count = 0;
 	while(1) {
+		log_warn( "______startup begin %d", ++count);
 		ReactorStation station;
 		station.startup();
 
 		TcpServer server( "127.0.0.1", port );
-		server.setMaxThreads( maxThreads );
-		server.setReqQueueSize( 100, "HTTP/1.1 500 Sorry, server is busy now!\r\n" );
 		server.registerEvent(station.getEventArg());
 
 		getchar();
 
 		server.shutdown();
 		station.shutdown();
-		printf( "______shutdown done %d\n", ++count);
+		log_warn( "______shutdown done %d", ++count);
 	}
 
 

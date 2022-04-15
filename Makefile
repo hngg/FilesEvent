@@ -13,7 +13,7 @@ CFLAGS   += -I./ -I./net -I./common
 CXXFLAGS += $(COMPLIE_INCL)
 LDFLAGS  += $(COMPLIE_LIB) -lpthread
 
-TARGET = UdpEventServer UdpEventClient TcpEventServer TcpEventClient librealserver.a move
+TARGET = TcpEventServer TcpEventClient librealserver.a move # UdpEventServer UdpEventClient 
 
 #--------------------------------------------------------------------
 
@@ -26,6 +26,7 @@ OBJECTS = net/buffer.o \
 			net/evbuffer.o \
 			net/signal.o \
 			net/log.o \
+			common/glog.o \
 			common/net_utils.o \
 			BufferCache.o \
 			IOUtils.o \

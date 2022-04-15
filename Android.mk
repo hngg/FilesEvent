@@ -32,6 +32,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/evbuffer.c \
 				net/signal.c \
 				net/log.c \
+				common/glog.c \
 				common/net_utils.c \
 				ReactorStation.cpp \
 				BufferCache.cpp \

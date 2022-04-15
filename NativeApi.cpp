@@ -2,8 +2,7 @@
 #include "ReactorStation.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
-// #include "RealCameraCodec.h"
-// #include "UpperNdkEncodec.h"
+
 
 #include <jni.h>
 #include "basedef.h"
@@ -15,16 +14,16 @@
 JavaVM*		 g_javaVM		= NULL;
 jclass 		 g_mClass		= NULL;
 
-ReactorStation mStatiion;
-TcpClient	 *mpClient		= NULL;
-TcpServer	 *mpServer		= NULL;
-// RealCameraCodec *gRealCam   = NULL;
-// UpperNdkEncodec *gUpcamEnc	= NULL;
+ReactorStation 	mStatiion;
+TcpClient	 	*mpClient		= NULL;
+TcpServer	 	*mpServer		= NULL;
+
 
 /////////////////////////////////////////////////////Server and real view////////////////////////////////////////////////////////
 
 static jboolean StartNetWork(JNIEnv *env, jobject) {
 	if(mStatiion.isRunning() == 0) {
+		log_warn("______startup begin.");
 		mStatiion.startup();
 		return true;
 	}
@@ -34,6 +33,7 @@ static jboolean StartNetWork(JNIEnv *env, jobject) {
 static jboolean StopNetWork(JNIEnv *env, jobject) {
 	if(mStatiion.isRunning() == 1) {
 		mStatiion.shutdown();
+		log_warn("______shutdown done.");
 		return true;
 	}
 	return false;
@@ -42,9 +42,13 @@ static jboolean StopNetWork(JNIEnv *env, jobject) {
 static jboolean StartServer(JNIEnv *env, jobject obj, jstring localip, jint destport)
 {
 	if(mpServer==NULL) {
-		mpServer = new TcpServer("", destport);
-		mpServer->setMaxThreads( 10 );
+		jboolean isOk = JNI_FALSE;
+		const char*ip = env->GetStringUTFChars(localip, &isOk);
+
+		mpServer = new TcpServer(ip, destport);
 		mpServer->registerEvent(mStatiion.getEventArg());
+
+		env->ReleaseStringUTFChars(localip, ip);
 	}
 
 	g_mClass = (jclass)env->NewGlobalRef(obj);
@@ -107,13 +111,13 @@ static jboolean StopFileRecv(JNIEnv *env, jobject)
 
 static JNINativeMethod video_method_table[] = {
 
-		{"StartNetWork", "()Z", (void*)StartNetWork },
-		{"StopNetWork", "()Z", (void*)StopNetWork },
-		{"StartServer", "(Ljava/lang/String;I)Z", (void*)StartServer },
-		{"StopServer", "()Z", (void*)StopServer },
+	{"StartNetWork", "()Z", (void*)StartNetWork },
+	{"StopNetWork", "()Z", (void*)StopNetWork },
+	{"StartServer", "(Ljava/lang/String;I)Z", (void*)StartServer },
+	{"StopServer", "()Z", (void*)StopServer },
 
-		{"StartFileRecv", "(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)Z", (void*)StartFileRecv },
-		{"StopFileRecv", "()Z", (void*)StopFileRecv },
+	{"StartFileRecv", "(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)Z", (void*)StartFileRecv },
+	{"StopFileRecv", "()Z", (void*)StopFileRecv },
 };
 
 int registerNativeMethods(JNIEnv* env, const char* className, JNINativeMethod* methods, int numMethods)
@@ -122,11 +126,11 @@ int registerNativeMethods(JNIEnv* env, const char* className, JNINativeMethod* m
 
     clazz = env->FindClass(className);
     if (clazz == NULL) {
-        GLOGE("Native registration unable to find class '%s'", className);
+        log_error("Native registration unable to find class '%s'", className);
         return JNI_FALSE;
     }
     if (env->RegisterNatives(clazz, methods, numMethods) < 0) {
-        GLOGE("RegisterNatives failed for '%s'", className);
+        log_error("RegisterNatives failed for '%s'", className);
         return JNI_FALSE;
     }
 
@@ -138,10 +142,10 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	JNIEnv* env = NULL;
 	jint result = -1;
 
-	GLOGI("Compile: %s %s\n", __DATE__, __TIME__);
+	log_info("Compile: %s %s\n", __DATE__, __TIME__);
 
 	if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-		GLOGE("GetEnv failed!");
+		log_error("GetEnv failed!");
 		return result;
 	}
 
@@ -149,7 +153,7 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 	registerNativeMethods(env, REG_PATH, video_method_table, NELEM(video_method_table));
 
-	GLOGW("JNI_OnLoad......");
+	log_info("JNI_OnLoad......");
 
 	return JNI_VERSION_1_4;
 }

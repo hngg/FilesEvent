@@ -9,7 +9,8 @@
 
 class BufferCache;
 
-class TaskFileRecv :public TaskBase {
+class TaskFileRecv :public TaskBase 
+{
 	public:
 		TaskFileRecv( Session*sess, Sid_t &sid );
 		TaskFileRecv( Session*sess, Sid_t &sid, char*remoteFile );
@@ -24,7 +25,6 @@ class TaskFileRecv :public TaskBase {
 
 		int recvPackData();
 
-		//struct tagCmdBuffer 		mCmdBuffer;
 		struct tagFileProcBuffer 	mRecvBuffer;
 		Session			*mSess;
 		FILE			*mwFile;

@@ -76,14 +76,14 @@ typedef struct {
 
 typedef struct
 {
-  int startcodeprefix_len;      //! 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
-  unsigned len;                 //! Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
-  unsigned max_size;            //! Nal Unit Buffer size
-  int forbidden_bit;            //! should be always FALSE
-  int nal_reference_idc;        //! NALU_PRIORITY_xxxx
-  int nal_unit_type;            //! NALU_TYPE_xxxx
-  unsigned char *buf;                    //! contains the first byte followed by the EBSP
-  unsigned short lost_packets;  //! true, if packet loss is detected
+	int startcodeprefix_len;      //! 4 for parameter sets and first slice in picture, 3 for everything else (suggested)
+	unsigned len;                 //! Length of the NAL unit (Excluding the start code, which does not belong to the NALU)
+	unsigned max_size;            //! Nal Unit Buffer size
+	int forbidden_bit;            //! should be always FALSE
+	int nal_reference_idc;        //! NALU_PRIORITY_xxxx
+	int nal_unit_type;            //! NALU_TYPE_xxxx
+	unsigned char *buf;                    //! contains the first byte followed by the EBSP
+	unsigned short lost_packets;  //! true, if packet loss is detected
 } NALU_t;
 
 
@@ -100,19 +100,6 @@ const int  MAX_MTU  = MAX_LEN+sizeof(PACK_HEAD);
 #endif
 
 //recv data struct
-struct tagRecvBuffer {
-	char cmmd[CMD_LEN];
-	bool bProcCmmd;
-	int  hasProcLen;
-	int  totalLen;
-	void reset() {
-		bProcCmmd 	= true;
-		hasProcLen 	= 0;
-		totalLen 	= sizeof(NET_CMD);
-		memset(cmmd,0, CMD_LEN);
-	}
-};
-
 struct tagCmdBuffer {
 	char cmmd[CMD_LEN];
 	bool bProcCmmd;
@@ -129,12 +116,15 @@ struct tagCmdBuffer {
 struct tagFileProcBuffer {
 	char cmmd[CMD_LEN];
 	bool bProcCmmd;
+
 	int  hasProcLen;
 	int  totalLen;//1500 is cmd len
 	int  dataLen;
+	int  memLen;
 	char *data;
 
-	tagFileProcBuffer() {
+	tagFileProcBuffer() 
+	{
 		data 		= NULL;
 		totalLen 	= 0;
 		dataLen 	= 0;
@@ -142,89 +132,119 @@ struct tagFileProcBuffer {
 		bProcCmmd 	= true;
 	}
 
-	void reset() {
+	void reset() 
+	{
 		//std::lock_guard<std::mutex> lk(mut);
 		memset(cmmd, 0, CMD_LEN);
-		if(data) {
-		}
-		hasProcLen 	= 0;
-		totalLen 	= 0;
-		dataLen		= 0;
-		bProcCmmd 	= true;
-	}
 
-	void createMem(int len) {
-		if(data==NULL)
-			data = (char*)malloc(len);
-	}
-
-	void releaseMem() {
-		if(data) {
-			free(data);
-			data=NULL;
-		}
-	}
-
-	bool isSendVideo() {
-		return bProcCmmd==false;
-	}
-	void setToVideo() {
-		bProcCmmd	= false;
-		hasProcLen 	= 0;
-		totalLen 	= dataLen;
-	}
-};
-
-struct tagFileSendBuffer {
-
-	bool bProcCmmd;
-	int  hasProcLen;
-	int  totalLen;//1500 is cmd len
-	char cmmd[CMD_LEN];
-	int  dataLen;
-	char *data;
-
-	tagFileSendBuffer() {
-		data 		= NULL;
 		totalLen 	= 0;
 		dataLen 	= 0;
 		hasProcLen 	= 0;
 		bProcCmmd 	= true;
 	}
 
-	void reset() {
-		//std::lock_guard<std::mutex> lk(mut);
-		memset(cmmd, 0, CMD_LEN);
-		if(data) {
-
-		}
-		hasProcLen 	= 0;
-		totalLen 	= 0;
-		dataLen		= 0;
-		bProcCmmd 	= true;
-	}
-
-	void createMem(int len) {
+	void createMem(int len) 
+	{
 		if(data==NULL)
+		{
 			data = (char*)malloc(len);
+			memLen = len;
+		}
 	}
 
-	void releaseMem() {
-		if(data) {
+	int maxMemoryLengh()
+	{
+		return memLen;
+	}
+
+	void releaseMem() 
+	{
+		if(data)
+		{
 			free(data);
 			data=NULL;
+			memLen = 0;
 		}
 	}
 
-	bool isSendVideo() {
+	bool isSendVideo() 
+	{
 		return bProcCmmd==false;
 	}
-	void setToVideo() {
+
+	void setToVideo() 
+	{
 		bProcCmmd	= false;
 		hasProcLen 	= 0;
 		totalLen 	= dataLen;
 	}
 };
+
+// struct tagFileSendBuffer 
+// {
+// 	char cmmd[CMD_LEN];
+// 	bool bProcCmmd;
+
+// 	int  hasProcLen;
+// 	int  totalLen;//1500 is cmd len
+// 	int  dataLen;
+// 	int  memLen;
+// 	char *data;
+
+// 	tagFileSendBuffer() 
+// 	{
+// 		data 		= NULL;
+// 		totalLen 	= 0;
+// 		dataLen 	= 0;
+// 		memLen		= 0;
+// 		hasProcLen 	= 0;
+// 		bProcCmmd 	= true;
+// 	}
+
+// 	void reset() 
+// 	{
+// 		//std::lock_guard<std::mutex> lk(mut);
+// 		memset(cmmd, 0, CMD_LEN);
+// 		if(data) {
+
+// 		}
+// 		totalLen 	= 0;
+// 		dataLen 	= 0;
+// 		memLen		= 0;
+// 		hasProcLen 	= 0;
+// 		bProcCmmd 	= true;
+// 	}
+
+// 	void createMem(int len) 
+// 	{
+// 		if(data==NULL)
+// 		{
+// 			data = (char*)malloc(len);
+// 			memLen = len;
+// 		}
+// 	}
+
+// 	void releaseMem() 
+// 	{
+// 		if(data) 
+// 		{
+// 			free(data);
+// 			data=NULL;
+// 		}
+// 	}
+
+// 	bool isSendVideo() 
+// 	{
+// 		return bProcCmmd==false;
+// 	}
+
+// 	void setToVideo() 
+// 	{
+// 		bProcCmmd	= false;
+// 		hasProcLen 	= 0;
+// 		totalLen 	= dataLen;
+// 	}
+// };
 
 
 #endif

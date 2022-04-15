@@ -18,32 +18,19 @@
 #include "basedef.h"
 
 //#include "event_msgqueue.h"
+#define MAX_CONNECTIONS 256
 
 TcpServer :: TcpServer( const char * bindIP, int port )
+			:mListenFD(0)
+			,mMaxConnections(MAX_CONNECTIONS)
 {
 	snprintf( mBindIP, sizeof( mBindIP ), "%s", bindIP );
 	mPort = port;
-	mIsShutdown = 0;
-	mIsRunning = 0;
-	mListenFD = 0;
-
-
-	mMaxThreads 	= 64;
-	mReqQueueSize 	= 128;
-	mMaxConnections = 256;
-	mRefusedMsg 	= strdup( "System busy, try again later." );
 }
 
 TcpServer :: ~TcpServer()
 {
-	if( NULL != mRefusedMsg ) free( mRefusedMsg );
-	mRefusedMsg = NULL;
-}
 
-
-void TcpServer :: setMaxThreads( int maxThreads )
-{
-	mMaxThreads = maxThreads > 0 ? maxThreads : mMaxThreads;
 }
 
 void TcpServer :: setMaxConnections( int maxConnections )
@@ -51,27 +38,16 @@ void TcpServer :: setMaxConnections( int maxConnections )
 	mMaxConnections = maxConnections > 0 ? maxConnections : mMaxConnections;
 }
 
-void TcpServer :: setReqQueueSize( int reqQueueSize, const char * refusedMsg )
-{
-	mReqQueueSize = reqQueueSize > 0 ? reqQueueSize : mReqQueueSize;
-
-	if( NULL != mRefusedMsg ) free( mRefusedMsg );
-	mRefusedMsg = strdup( refusedMsg );
-}
-
-int TcpServer :: registerEvent(const EventGlobal& evarg) {
+int TcpServer :: registerEvent(EventGlobal& evarg) {
 	int ret = 0;
 
 	ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
-	GLOGW("create listenid:%d ret:%d", mListenFD, ret);
+	log_warn("create listenid:%d ret:%d", mListenFD, ret);
 
-	memset( &mAcceptArg, 0, sizeof( AcceptArg_t ) );
-	mAcceptArg.mEventArg 		= (EventGlobal*)&evarg;
-	mAcceptArg.mReqQueueSize 	= mReqQueueSize;
-	mAcceptArg.mMaxConnections 	= mMaxConnections;
-	mAcceptArg.mRefusedMsg 		= mRefusedMsg;
 
-	event_set( &mEvAccept, mListenFD, EV_READ|EV_PERSIST, EventActor::onAccept, &mAcceptArg );
+	evarg.setMaxConnections(mMaxConnections);
+
+	event_set( &mEvAccept, mListenFD, EV_READ|EV_PERSIST, EventActor::onAccept, &evarg );
 	event_base_set( evarg.getEventBase(), &mEvAccept );
 	event_add( &mEvAccept, NULL );
 
@@ -82,16 +58,8 @@ void TcpServer :: shutdown() {
 	event_del( &mEvAccept);
 	if(mListenFD>0) {
 		close(mListenFD);
-		GLOGW("close listenid:%d", mListenFD);
+		log_warn("close listenid:%d", mListenFD);
 		mListenFD = -1;
-	}
-}
-
-void TcpServer :: setRealView(int sockId, void*surface) {
-	if(mAcceptArg.mEventArg) {
-		EventGlobal *arg = mAcceptArg.mEventArg;
-		SessionManager * manager = arg->getSessionManager();
-		manager->setRealView(sockId, surface);
 	}
 }
 

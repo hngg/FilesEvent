@@ -67,15 +67,17 @@
 		mSendBuffer.bProcCmmd 	= true;
 		int ret = tcpSendData();
 
-		GLOGE("file %s len:%u", filename, mFileLen);//get_filesize(filename)
+		log_warn("file %s len:%u", filename, mFileLen);//get_filesize(filename)
 	}
 
 
-	TaskFileSend::~TaskFileSend() {
+	TaskFileSend::~TaskFileSend() 
+	{
 		delete mInBuffer;
 		mInBuffer = NULL;
 
-		if(mpFile != NULL) {
+		if(mpFile != NULL) 
+		{
 			fclose(mpFile);
 			mpFile = NULL;
 		}
@@ -85,7 +87,8 @@
 		mSendBuffer.releaseMem();
 	}
 
-	int TaskFileSend::sendVariedCmd(int iVal) {
+	int TaskFileSend::sendVariedCmd(int iVal) 
+	{
 		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmmd;
 		pCmd->dwFlag 	= NET_FLAG;
 		pCmd->dwCmd 	= iVal;
@@ -99,14 +102,17 @@
 	}
 
 	//Here further processing is needed.
-	int TaskFileSend::writeBuffer() {
+	int TaskFileSend::writeBuffer() 
+	{
 		int ret = 0;
 
 		if(mSendBuffer.totalLen==0) //take new data and send,totalLen is cmd len first
 		{
-			if(mHasReadLen<mFileLen) {
+			if(mHasReadLen<mFileLen) 
+			{
 
-				if(mMsgQueue.getSize()>0) {
+				if(mMsgQueue.getSize()>0) 
+				{
 					int val = 0;
 					mMsgQueue.try_pop(val);
 					return sendVariedCmd(val);
@@ -137,7 +143,7 @@
 				mHasReadLen 			+= mSendBuffer.dataLen;
 
 				mFrameCount++;
-				GLOGE("fread data len:%d mHasReadLen:%d cmd mFrameCount:%d", mSendBuffer.dataLen, mHasReadLen, mFrameCount);
+				log_info("fread data len:%d mHasReadLen:%d cmd mFrameCount:%d", mSendBuffer.dataLen, mHasReadLen, mFrameCount);
 			}
 			else{
 				ret = pushSendCmd(MODULE_MSG_DATAEND);
@@ -162,7 +168,8 @@
 		return 0;
 	}
 
-	int TaskFileSend::sendEx(char*data, int len) {
+	int TaskFileSend::sendEx(char*data, int len) 
+	{
 		int leftLen = len, iRet = 0;
 
 		struct timeval timeout;
@@ -170,10 +177,11 @@
 		do {
 
 			iRet = send(sockId, data+len-leftLen, leftLen, 0);
-
-			if(iRet<0) {
+			if(iRet<0) 
+			{
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
-				switch(errno) {
+				switch(errno) 
+				{
 					case EAGAIN:
 						usleep(2000);
 						continue;
@@ -194,12 +202,13 @@
 	int TaskFileSend::tcpSendData()
 	{
 		int ret = 0;
-		if(mSendBuffer.bProcCmmd) {
+		if(mSendBuffer.bProcCmmd) 
+		{
 			ret = sendEx(mSendBuffer.cmmd+mSendBuffer.hasProcLen, mSendBuffer.totalLen-mSendBuffer.hasProcLen);
 			if(ret>0)
 				mSendBuffer.hasProcLen += ret;
 			else
-				GLOGE("tcpSendData cmd errno:%d ret:%d.", errno, ret);
+				log_error("tcpSendData cmd errno:%d ret:%d.", errno, ret);
 
 			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) {
 				mSendBuffer.setToVideo();
@@ -211,7 +220,7 @@
 			if(ret>0)
 				mSendBuffer.hasProcLen += ret;
 			else
-				GLOGE("tcpSendData dta errno:%d ret:%d .", errno, ret);
+				log_error("tcpSendData dta errno:%d ret:%d .", errno, ret);
 
 			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) {
 				mSendBuffer.reset();
@@ -220,10 +229,12 @@
 		return ret;
 	}
 
-	int TaskFileSend::pushSendCmd(int iVal, int index) {
+	int TaskFileSend::pushSendCmd(int iVal, int index) 
+	{
 		int ret = 0;
 		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmmd;
-		switch(iVal) {
+		switch(iVal) 
+		{
 			case MODULE_MSG_DATAEND:
 			case MODULE_MSG_SEEK_CMPD:
 			case MODULE_MSG_SECTION_END:
@@ -243,25 +254,29 @@
 					mMsgQueue.push(MODULE_MSG_PING);
 				break;
 		}
-		GLOGE("pushSendCmd value:%d ret:%d.", iVal, ret);
+		log_info("pushSendCmd value:%d ret:%d.", iVal, ret);
 
 		return ret;
 	}
 
-	int TaskFileSend::readBuffer() {
+	int TaskFileSend::readBuffer() 
+	{
 		int ret = -1;
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
-		if(mRecvBuffer.bProcCmmd) {
+		if(mRecvBuffer.bProcCmmd) 
+		{
 			ret = recv(mSid.mKey, mRecvBuffer.cmmd+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
-			if(ret>0) {
+			if(ret>0) 
+			{
 				hasRecvLen+=ret;
-				if(hasRecvLen==mPackHeadLen) {
+				if(hasRecvLen==mPackHeadLen) 
+				{
 					LPNET_CMD head = (LPNET_CMD)mRecvBuffer.cmmd;
 					mRecvBuffer.totalLen  = head->dwLength;
 					mRecvBuffer.bProcCmmd = false;
 					hasRecvLen = 0;
 
-					GLOGE("playback flag:%08x totalLen:%d ret:%d", head->dwFlag, mRecvBuffer.totalLen, ret);
+					log_info("sendfile flag:%08x totalLen:%d ret:%d", head->dwFlag, mRecvBuffer.totalLen, ret);
 					ret = recvPackData();
 				}
 			}
@@ -272,38 +287,46 @@
 		return ret;
 	}
 
-	int TaskFileSend::recvPackData() {
+	int TaskFileSend::recvPackData() 
+	{
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		int ret = recv(mSid.mKey, mRecvBuffer.cmmd+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
 		//GLOGE("-------------------recvPackData ret:%d\n",ret);
-		if(ret>0) {
+		if(ret>0) 
+		{
 			hasRecvLen += ret;
-			if(hasRecvLen==mRecvBuffer.totalLen) {
+			if(hasRecvLen==mRecvBuffer.totalLen) 
+			{
 
 				int lValueLen;
 			    char acValue[256] = {0};	//new char[256];
 			    memset(acValue, 0, 256);
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.cmmd;
-				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) {
+				if(pCmdbuf->dwCmd == MODULE_MSG_CONTROL_PLAY) 
+				{
 					PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"name", acValue, &lValueLen);
-					GLOGE("recv control commond acValue:%s",acValue);
-					if (strcmp(acValue, "start") == 0) {
+					log_info("recv control commond acValue:%s",acValue);
+
+					if (strcmp(acValue, "start") == 0) 
+					{
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"tmstart", acValue, &lValueLen);
-						GLOGE("tmstart:%d",atoi(acValue));
+						log_info("tmstart:%d",atoi(acValue));
 
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"tmend", acValue, &lValueLen);
-						GLOGE("tmend:%d",atoi(acValue));
+						log_info("tmend:%d",atoi(acValue));
 						EventActor::addEvent( mSess, EV_WRITE, -1 );
 					}
-					else if(strcmp(acValue, "setpause") == 0) {
+					else if(strcmp(acValue, "setpause") == 0) 
+					{
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"value", acValue, &lValueLen);
 						int value = atoi(acValue);
-						GLOGE("control setpause value:%d", value);
+						log_info("control setpause value:%d", value);
 					}
-					else if(strcmp(acValue, "send") == 0) {
+					else if(strcmp(acValue, "send") == 0) 
+					{
 						mbSendingData = true;
 						EventActor::addEvent( mSess, EV_WRITE, -1 );
 					}
@@ -313,7 +336,8 @@
 			    mRecvBuffer.reset();
 			}
 		}
-		else if(ret == 0) {
+		else if(ret == 0) 
+		{
 
 		}
 

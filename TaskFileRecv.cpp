@@ -42,7 +42,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 	jclass		tmpClass;
 
 	if(NULL == g_mClass) {
-		GLOGE("g_mClass is null.");
+		log_error("g_mClass is null.");
 		return result;
 	}
 
@@ -50,13 +50,13 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 	{
 		result = g_javaVM->AttachCurrentThread( &menv, NULL);
 		if(NULL == menv) {
-			GLOGE("function: %s, line: %d, GetEnv failed!", __FUNCTION__, __LINE__);
+			log_error("GetEnv failed!");
 			return g_javaVM->DetachCurrentThread();
 		}
 	}
 	else
 	{
-		GLOGE("function: %s, line: %d, JavaVM is null!", __FUNCTION__, __LINE__);
+		log_error("JavaVM is null!");
 		return result;
 	}
 
@@ -64,22 +64,23 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 	{
 		tmpClass = menv->GetObjectClass(g_mClass);
 		if(tmpClass == NULL) {
-			GLOGE("function: %s, line: %d, find class error", __FUNCTION__, __LINE__);
+			log_error("find class error.");
 			return g_javaVM->DetachCurrentThread();
 		}
 		mobj = menv->AllocObject(tmpClass);
 		if(NULL == mobj) {
-			GLOGE("function: %s, line: %d, find jobj error!", __FUNCTION__, __LINE__);
+			log_error("find jobj error!");
 			return g_javaVM->DetachCurrentThread();
 		}
 
 		jmethodID methodID_func = menv->GetMethodID(tmpClass, "onFileState", "(III)V");// sockid command length
 		if(methodID_func == NULL) {
-			GLOGE("function: %s, line: %d,find method error!", __FUNCTION__, __LINE__);
+			log_error("find method error!");
 			return g_javaVM->DetachCurrentThread();
 		}
 		else {
 			menv->CallVoidMethod(mobj, methodID_func, sockId, command, fileLen);
+			log_error("jcall sockid:%d command:%d fileLen:%d ", sockId, command, fileLen);
 		}
 	}
 
@@ -107,7 +108,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			GLOGE("send CMD err:%s", lpData);
+			log_error("send CMD err:%s", lpData);
 
 	}
 
@@ -131,8 +132,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			GLOGE("send CMD err:%s", lpData);
-
+			log_error("send CMD err:%s", lpData);
 	}
 
 	TaskFileRecv::TaskFileRecv( Session*sess, Sid_t &sid, char*remoteFile, char*saveFile )
@@ -152,14 +152,14 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		char lpData[2048];
 		int nLength = sprintf(lpData, "<get path=\"%s\"/>", remoteFile);
 
-
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			GLOGE("send CMD err:%s", lpData);
+			log_error("send CMD err:%s", lpData);
 	}
 
-	TaskFileRecv::~TaskFileRecv() {
+	TaskFileRecv::~TaskFileRecv() 
+	{
 
-		GLOGW("file seek:%ld", ftell(mwFile));
+		log_info("file seek:%ld", ftell(mwFile));
 
 		if(mwFile != NULL)
 			fclose(mwFile);
@@ -167,7 +167,8 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		mRecvBuffer.releaseMem();
 	}
 
-	int TaskFileRecv::sendEx(void*data, int len) {
+	int TaskFileRecv::sendEx(void*data, int len) 
+	{
 		int leftLen = len, iRet = 0;
 
 		struct timeval timeout;
@@ -175,15 +176,17 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		do {
 			iRet = send(sockId, (char*)data+len-leftLen, leftLen, 0);
 
-			if(iRet<0) {
+			if(iRet<0) 
+			{
 				//GLOGE("send data errno:%d ret:%d.", errno, iRet);
-				switch(errno) {
-				case EAGAIN:	//11 Resource temporarily unavailable,try again
-					usleep(2000);
-					continue;
+				switch(errno) 
+				{
+					case EAGAIN:	//11 Resource temporarily unavailable,try again
+						usleep(2000);
+						continue;
 
-				case EPIPE:		//32 Broken pipe
-					break;
+					case EPIPE:		//32 Broken pipe
+						break;
 				}
 				return iRet;
 			}
@@ -206,52 +209,58 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		nc.dwLength = nLength;
 		if ((iRet = sendEx(&nc, sizeof(nc)))<0)
 		{
-			GLOGE("send cmd err len = %d ", nLength);
+			log_error("send cmd err len = %d ", nLength);
 			return iRet;
 		}
 
-		GLOGW("send head len:%d ", (int)sizeof(nc));
+		log_info("send command head len:%d ", (int)sizeof(nc));
 		if (nLength == 0)
 		{
 			return 0;
 		}
 		if ((iRet = sendEx(lpData, nLength))<0)
 		{
-			GLOGE("send lpdata err len = %d ",nLength);
+			log_error("send lpdata err len = %d ",nLength);
 			return iRet;
 		}
-		GLOGW("send data len:%d lpData:%s", nLength, (char*)lpData);
+		log_info("send command data len:%d lpData:%s", nLength, (char*)lpData);
 		return iRet;
 	}
 
 	//read event callback function
-	int TaskFileRecv::readBuffer() {
+	int TaskFileRecv::readBuffer() 
+	{
 		int ret = -1;
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
-		if(mRecvBuffer.bProcCmmd) {
+		if(mRecvBuffer.bProcCmmd) 
+		{
 			ret = recv(mSid.mKey, mRecvBuffer.data+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
 
-			if(ret>0) {
+			if(ret>0) 
+			{
 				hasRecvLen+=ret;
-				if(hasRecvLen==mPackHeadLen) {
+				if(hasRecvLen==mPackHeadLen) 
+				{
 					LPNET_CMD head = (LPNET_CMD)mRecvBuffer.data;
 					mRecvBuffer.totalLen  = head->dwLength;//package data length
 					mRecvBuffer.bProcCmmd = false;
 					hasRecvLen = 0;
 
-					GLOGE("playback flag:%08x cmd:%d read event need recv totalLen:%d ret:%d", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
+					log_info("playback flag:%08x cmd:%d read event need recv totalLen:%d ret:%d", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
 
-					if(head->dwLength>0) {
+					if(head->dwLength>0) 
+					{
 						ret = recvPackData();
 					}
 					else
 					{
-						switch(head->dwCmd) {
+						switch(head->dwCmd) 
+						{
 							case MODULE_MSG_DATAEND:	//69
 								#ifdef 	__ANDROID__
 									FileRecvCallback(mSid.mKey, RECV_TELL_END, 0);
 								#endif
-								GLOGW("MODULE_MSG_DATAEND");
+								log_info("MODULE_MSG_DATAEND");
 							break;
 
 							case MODULE_MSG_SECTION_END://70
@@ -271,7 +280,8 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				#endif
 			}
 		}//bProcCmmd
-		else{
+		else
+		{
 			ret = recvPackData();
 		}
 
@@ -281,14 +291,16 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 	}
 
 	//receive file data,head length is 16byte,other is data
-	int TaskFileRecv::recvPackData() {
+	int TaskFileRecv::recvPackData() 
+	{
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		int ret = recv(mSid.mKey, mRecvBuffer.data+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
-		GLOGE("------recvPackData ret:%d hasRecvLne:%d totalLen:%d", ret, hasRecvLen, mRecvBuffer.totalLen);
-		if(ret>0) {
+		log_info("------recvPackData ret:%d hasRecvLne:%d totalLen:%d", ret, hasRecvLen, mRecvBuffer.totalLen);
+		if(ret>0) 
+		{
 			hasRecvLen += ret;
-			if(hasRecvLen==mRecvBuffer.totalLen) {
-
+			if(hasRecvLen==mRecvBuffer.totalLen) 
+			{
 				int lValueLen;
 			    char acValue[256] = {0};	//new char[256];
 			    memset(acValue, 0, 256);
@@ -304,7 +316,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						lpFrame 		= (LPFILE_GET)(pCmdbuf->lpData);
 						fwrite(lpFrame->lpData , 1 , lpFrame->nLength , mwFile);
 						fflush(mwFile);
-						GLOGW("frame len:%d", lpFrame->nLength);
+						log_info("frame len:%d", lpFrame->nLength);
 
 						#ifdef 	__ANDROID__
 							FileRecvCallback(mSid.mKey, RECV_TELL_READ_LENGTH, lpFrame->nLength);
@@ -316,7 +328,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						LPFILE_INFO lpInfo= (LPFILE_INFO)lpRet->lpData;
 						mTotalLen = lpInfo->tmEnd;
 
-						GLOGW("The file to recv TotalLen:%d", mTotalLen);
+						log_info("The file to recv TotalLen:%d", mTotalLen);
 
 						char szCmd[100];
 						int len = sprintf(szCmd, "<control name=\"start\" tmstart=\"%d\" tmend=\"%d\" />", 0, mTotalLen);
@@ -334,7 +346,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			}
 			else if(hasRecvLen>mRecvBuffer.totalLen)
 			{
-				GLOGE("hasRecvLen:%d bigger than totalLen:%d maybe memory out.", hasRecvLen, mRecvBuffer.totalLen);
+				log_error("hasRecvLen:%d bigger than totalLen:%d maybe memory out.", hasRecvLen, mRecvBuffer.totalLen);
 			}
 		}
 		else if(ret == 0) {
@@ -344,7 +356,8 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		return ret;
 	}
 
-	int TaskFileRecv::writeBuffer() {
+	int TaskFileRecv::writeBuffer() 
+	{
 
 		return 0;
 	}

@@ -9,8 +9,8 @@
 
 class BufferCache;
 
-class TaskFileSend :public TaskBase {
-
+class TaskFileSend :public TaskBase 
+{
 	public:
 		TaskFileSend( Session*sess, Sid_t& sid, char*filename );
 		virtual ~TaskFileSend();
@@ -28,8 +28,8 @@ class TaskFileSend :public TaskBase {
 		int sendVariedCmd(int iVal);
 
 	private:
-		struct tagRecvBuffer 		mRecvBuffer;
-		struct tagFileSendBuffer 	mSendBuffer;
+		struct tagCmdBuffer 		mRecvBuffer;
+		struct tagFileProcBuffer 	mSendBuffer;
 		BufferCache 		 		*mInBuffer;
 		FILE						*mpFile;
 		Session						*mSess;
