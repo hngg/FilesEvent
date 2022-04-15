@@ -38,12 +38,12 @@ void TcpServer :: setMaxConnections( int maxConnections )
 	mMaxConnections = maxConnections > 0 ? maxConnections : mMaxConnections;
 }
 
-int TcpServer :: registerEvent(EventGlobal& evarg) {
+int TcpServer :: registerEvent(EventGlobal& evarg) 
+{
 	int ret = 0;
 
 	ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
 	log_warn("create listenid:%d ret:%d", mListenFD, ret);
-
 
 	evarg.setMaxConnections(mMaxConnections);
 
@@ -54,9 +54,11 @@ int TcpServer :: registerEvent(EventGlobal& evarg) {
 	return ret;
 }
 
-void TcpServer :: shutdown() {
+void TcpServer :: shutdown() 
+{
 	event_del( &mEvAccept);
-	if(mListenFD>0) {
+	if(mListenFD>0) 
+	{
 		close(mListenFD);
 		log_warn("close listenid:%d", mListenFD);
 		mListenFD = -1;

@@ -43,7 +43,7 @@ int main( int argc, char * argv[] )
 	}
 
 	int count = 0;
-	while(1) {
+	do{
 		log_warn( "______startup begin %d", ++count);
 		ReactorStation station;
 		station.startup();
@@ -56,7 +56,7 @@ int main( int argc, char * argv[] )
 		server.shutdown();
 		station.shutdown();
 		log_warn( "______shutdown done %d", ++count);
-	}
+	}while(0);
 
 
 	return 0;

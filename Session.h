@@ -12,27 +12,24 @@ struct event;
 class Session {
 
 public:
-	Session( Sid_t sid );
-	Session( Sid_t sid, short type);
-	Session( Sid_t sid, short type, char*filepath);
-	Session( Sid_t sid, short type, void*surface);//real show
-	Session( Sid_t sid, short type, char*filepath, void*surface); //get h264 show
-	Session( Sid_t sid, short type, char*remoteFile, char*saveFile);
+	Session( Sockid_t sid );
+	Session( Sockid_t sid, short type);
+	Session( Sockid_t sid, short type, char*filepath);
+	Session( Sockid_t sid, short type, void*surface);//real show
+	Session( Sockid_t sid, short type, char*filepath, void*surface); //get h264 show
+	Session( Sockid_t sid, short type, char*remoteFile, char*saveFile);
 	virtual ~Session();
 
+
+	int addReadEvent(void (*callback)(int, short, void *));
 	struct event * getReadEvent();	
 	struct event * getWriteEvent();
 	struct event * getTimeEvent();
 
-	//void setHandler( SP_Handler * handler );
-	//SP_Handler * getHandler();
-
-	void setSurface(void *surface);
-
 	void setArg( void * arg );
 	void * getArg();
 
-	Sid_t getSid();
+	Sockid_t getSid();
 
 	enum { eNormal, eWouldExit, eExit };
 	void setStatus( int status );
@@ -52,6 +49,8 @@ public:
 	int getWriting();
 	void setWriting( int writing );
 
+	static void onRead( int fd, short events, void * arg );
+
 private:
 	Session( Session & );
 	Session & operator=( Session & );
@@ -59,13 +58,13 @@ private:
 	int recvPackData();
 
 
-	Sid_t mSid;
+	Sockid_t mSid;
 	TaskBase *mTaskBase;
 
 	struct event * mReadEvent;
 	struct event * mWriteEvent;
 	struct event * mTimeEvent;
-	//SP_Handler * mHandler;
+
 	void * mArg;
 
 

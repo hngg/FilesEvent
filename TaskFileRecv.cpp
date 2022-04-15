@@ -89,7 +89,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 #endif
 
-	TaskFileRecv::TaskFileRecv( Session*sess, Sid_t &sid )
+	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid )
 				:mPackHeadLen(sizeof(NET_CMD))
 				,TaskBase(sid)
 				,mSess(sess)
@@ -109,11 +109,10 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
 			log_error("send CMD err:%s", lpData);
-
 	}
 
 
-	TaskFileRecv::TaskFileRecv( Session*sess, Sid_t &sid, char*remoteFile )
+	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile )
 				:mPackHeadLen(sizeof(NET_CMD))
 				,TaskBase(sid)
 				,mSess(sess)
@@ -135,7 +134,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			log_error("send CMD err:%s", lpData);
 	}
 
-	TaskFileRecv::TaskFileRecv( Session*sess, Sid_t &sid, char*remoteFile, char*saveFile )
+	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile, char*saveFile )
 				:mPackHeadLen(sizeof(NET_CMD))
 				,TaskBase(sid)
 				,mSess(sess)
@@ -143,7 +142,6 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 				,mRecvHeadLen(0)
 				,mTotalLen(0)
 	{
-		//mCmdBuffer.reset();
 		mRecvBuffer.reset();
 		mRecvBuffer.createMem(FILE_MEMORY_LEN+sizeof(NET_CMD));
 
@@ -158,7 +156,6 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 	TaskFileRecv::~TaskFileRecv() 
 	{
-
 		log_info("file seek:%ld", ftell(mwFile));
 
 		if(mwFile != NULL)
@@ -172,7 +169,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		int leftLen = len, iRet = 0;
 
 		struct timeval timeout;
-		int sockId = mSid.mKey;
+		int sockId = mSid.sid;
 		do {
 			iRet = send(sockId, (char*)data+len-leftLen, leftLen, 0);
 
@@ -234,7 +231,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		if(mRecvBuffer.bProcCmmd) 
 		{
-			ret = recv(mSid.mKey, mRecvBuffer.data+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
+			ret = recv(mSid.sid, mRecvBuffer.data+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
 
 			if(ret>0) 
 			{
@@ -258,7 +255,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						{
 							case MODULE_MSG_DATAEND:	//69
 								#ifdef 	__ANDROID__
-									FileRecvCallback(mSid.mKey, RECV_TELL_END, 0);
+									FileRecvCallback(mSid.sid, RECV_TELL_END, 0);
 								#endif
 								log_info("MODULE_MSG_DATAEND");
 							break;
@@ -276,7 +273,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			else
 			{
 				#ifdef 	__ANDROID__
-					FileRecvCallback(mSid.mKey, RECV_TELL_SAVE_DONE, 0);
+					FileRecvCallback(mSid.sid, RECV_TELL_SAVE_DONE, 0);
 				#endif
 			}
 		}//bProcCmmd
@@ -294,7 +291,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 	int TaskFileRecv::recvPackData() 
 	{
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
-		int ret = recv(mSid.mKey, mRecvBuffer.data+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
+		int ret = recv(mSid.sid, mRecvBuffer.data+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
 		log_info("------recvPackData ret:%d hasRecvLne:%d totalLen:%d", ret, hasRecvLen, mRecvBuffer.totalLen);
 		if(ret>0) 
 		{
@@ -319,7 +316,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						log_info("frame len:%d", lpFrame->nLength);
 
 						#ifdef 	__ANDROID__
-							FileRecvCallback(mSid.mKey, RECV_TELL_READ_LENGTH, lpFrame->nLength);
+							FileRecvCallback(mSid.sid, RECV_TELL_READ_LENGTH, lpFrame->nLength);
 						#endif
 						break;
 
@@ -335,7 +332,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						SendCmd(MODULE_MSG_CONTROL_PLAY, 0, szCmd,len + 1);
 
 						#ifdef 	__ANDROID__
-							FileRecvCallback(mSid.mKey, RECV_TELL_TOTAL_LENGTH, mTotalLen);
+							FileRecvCallback(mSid.sid, RECV_TELL_TOTAL_LENGTH, mTotalLen);
 						#endif
 						break;
 				}

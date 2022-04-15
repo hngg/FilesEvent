@@ -1,5 +1,4 @@
 
-
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -20,7 +19,7 @@
 
 	ReactorStation :: ~ReactorStation() 
 	{
-		mEventArg.Destroy();
+		mEveGlobal.Destroy();
 		log_warn("ActorStation Destroy.");
 	}
 
@@ -30,15 +29,17 @@
 	}
 
 	EventGlobal&  ReactorStation :: getEventArg() {
-		return mEventArg;
+		return mEveGlobal;
 	}
 
-	int ReactorStation :: startup() {
-		if(isRunning()==0) {
+	int ReactorStation :: startup() 
+	{
+		if(isRunning()==0) 
+		{
 			mIsShutdown = 0;
 			
-			mEventArg.Create();
-			mEventArg.setTimeout(mTimeout);
+			mEveGlobal.Create();
+			mEveGlobal.setTimeout(mTimeout);
 
 			run();
 
@@ -47,23 +48,29 @@
 		return -1;
 	}
 
-	void ReactorStation :: shutdown() {
-		if(isRunning()==1) {
+	void ReactorStation :: shutdown() 
+	{
+		if(isRunning()==1) 
+		{
 			mIsShutdown = 1;
 			struct timeval tv;
 			tv.tv_sec=0;
 			tv.tv_usec=10;
 			event_loopexit(&tv);
 
+			mEveGlobal.Destroy();
+
 			log_warn("ReactorStation shutdown function.");
 		}
 	}
 
-	int ReactorStation :: isRunning() {
+	int ReactorStation :: isRunning() 
+	{
 		return mIsRunning;
 	}
 
-	int ReactorStation :: run() {
+	int ReactorStation :: run() 
+	{
 		int ret = -1;
 
 		pthread_attr_t attr;
@@ -89,7 +96,8 @@
 		return ret;
 	}
 
-	void * ReactorStation :: eventLoop( void * arg ) {
+	void * ReactorStation :: eventLoop( void * arg ) 
+	{
 		ReactorStation * station = (ReactorStation*)arg;
 
 		station->mIsRunning = 1;
@@ -101,30 +109,33 @@
 		return NULL;
 	}
 
-	int ReactorStation :: start() {
+	int ReactorStation :: start() 
+	{
 		/* Don't die with SIGPIPE on remote read shutdown. That's dumb. */
 		signal( SIGPIPE, SIG_IGN );
 
 		int ret = 0;
 
-		if( 0 == ret ) {
+		if( 0 == ret ) 
+		{
 			// Clean close on SIGINT or SIGTERM.
 			struct event evSigInt, evSigTerm;
 			signal_set( &evSigInt, SIGINT,  sigHandler, this );
-			event_base_set( mEventArg.getEventBase(), &evSigInt );
+			event_base_set( mEveGlobal.getEventBase(), &evSigInt );
 			signal_add( &evSigInt, NULL);
 
 			signal_set( &evSigTerm, SIGTERM, sigHandler, this );
-			event_base_set( mEventArg.getEventBase(), &evSigTerm );
+			event_base_set( mEveGlobal.getEventBase(), &evSigTerm );
 			signal_add( &evSigTerm, NULL);
 
 
 			/* Start the event loop. */
-			while( 0 == mIsShutdown ) {
-				event_base_loop( mEventArg.getEventBase(), EVLOOP_ONCE );
+			while( 0 == mIsShutdown ) 
+			{
+				event_base_loop( mEveGlobal.getEventBase(), EVLOOP_ONCE );
 			}
 
-			mEventArg.Destroy();
+			mEveGlobal.Destroy();
 			log_warn("ReactorStation is shutdown.");
 
 			signal_del( &evSigTerm );
@@ -133,7 +144,8 @@
 		return ret;
 	}
 
-	void ReactorStation :: sigHandler( int fd, short event, void * arg ) {
+	void ReactorStation :: sigHandler( int fd, short event, void * arg ) 
+	{
 		ReactorStation * station = (ReactorStation*)arg;
 		station->shutdown();
 		

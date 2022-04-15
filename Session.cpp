@@ -23,10 +23,12 @@
 #include "protocol.h"
 #include "net_utils.h"
 
+#include "EventActor.h"
 
 //---------------------------sessionManager----------------------------------------
 
-typedef struct tagSessionEntry {
+typedef struct tagSessionEntry 
+{
 	uint16_t mSeq;
 	Session  *mSession;
 } SessionEntry;
@@ -42,10 +44,10 @@ SessionManager :: ~SessionManager()
 	int arrLen = (int)( sizeof( mArray ) / sizeof( mArray[0] ));
 	for( int i = 0; i < arrLen; i++ ) 
 	{
-		SessionEntry_t * list = mArray[i];
-		if( NULL != list ) 
+		SessionEntry_t * node = mArray[i];
+		if( NULL != node ) 
 		{
-			SessionEntry_t * iter = list;
+			SessionEntry_t * iter = node;
 			for( int i = 0; i < 1024; i++, iter++ ) 
 			{
 				if( NULL != iter->mSession ) 
@@ -54,8 +56,8 @@ SessionManager :: ~SessionManager()
 					iter->mSession = NULL;
 				}
 			}
-			free( list );
-			list = NULL;
+			free( node );
+			node = NULL;
 		}
 	}
 
@@ -66,8 +68,6 @@ void SessionManager :: setRealView(int sockId, void*surface) {
 
 	uint16_t seq  = 0;
 	Session* sess = get( sockId, &seq );
-	if(sess)
-		sess->setSurface(surface);
 }
 
 int SessionManager :: getCount()
@@ -75,69 +75,69 @@ int SessionManager :: getCount()
 	return mCount;
 }
 
-void SessionManager :: put( uint16_t key, Session * session, uint16_t * seq )
+void SessionManager :: put( uint16_t sid, Session * session, uint16_t * seq )
 {
-	int row = key / 1024, col = key % 1024;
+	int row = sid / 1024, col = sid % 1024;
 
 	if( NULL == mArray[ row ] ) 
 	{
 		mArray[ row ] = ( SessionEntry_t * )calloc(1024, sizeof( SessionEntry_t ));
 	}
 
-	SessionEntry_t * list = mArray[ row ];
-	list[ col ].mSession = session;
-	*seq = list[ col ].mSeq;
+	SessionEntry_t * node = mArray[ row ];
+	node[ col ].mSession = session;
+	*seq = node[ col ].mSeq;
 
 	mCount++;
 }
 
-Session * SessionManager :: get( uint16_t key, uint16_t * seq )
+Session * SessionManager :: get( uint16_t sid, uint16_t * seq )
 {
-	int row = key / 1024, col = key % 1024;
+	int row = sid / 1024, col = sid % 1024;
 
-	Session * ret = NULL;
+	Session * sess = NULL;
 
-	SessionEntry_t * list = mArray[row];
-	if( NULL != list ) 
+	SessionEntry_t * node = mArray[row];
+	if( NULL != node ) 
 	{
-		ret  = list[col].mSession;
-		*seq = list[col].mSeq;
+		sess = node[col].mSession;
+		*seq = node[col].mSeq;
 	} 
 	else 
 	{
 		*seq = 0;
 	}
 
-	return ret;
+	return sess;
 }
 
-Session * SessionManager :: remove( uint16_t key, uint16_t * seq )
+Session * SessionManager :: remove( uint16_t sid, uint16_t * seq )
 {
-	int row = key / 1024, col = key % 1024;
+	int row = sid / 1024, col = sid % 1024;
 
-	Session * ret = NULL;
+	Session * sessRemoved = NULL;
 
-	SessionEntry_t * list = mArray[ row ];
-	if( NULL != list ) 
+	SessionEntry_t * node = mArray[ row ];
+	if( NULL != node ) 
 	{
-		ret = list[ col ].mSession;
+		sessRemoved = node[ col ].mSession;
 		if( NULL != seq ) 
-			*seq = list[ col ].mSeq;
+			*seq  = node[ col ].mSeq;
 
-		list[ col ].mSession = NULL;
-		list[ col ].mSeq++;
+		node[ col ].mSession = NULL;
+		node[ col ].mSeq++;
 
 		mCount--;
 	}
 
-	return ret;
+	return sessRemoved;
 }
 
 
 
 //----------------------------------session---------------------------------
 
-Session :: Session( Sid_t sid )
+Session :: Session( Sockid_t sid )
 			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
@@ -156,7 +156,7 @@ Session :: Session( Sid_t sid )
 	mReading 	= 0;
 }
 
-Session :: Session( Sid_t sid, short type)
+Session :: Session( Sockid_t sid, short type)
 			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
@@ -173,7 +173,8 @@ Session :: Session( Sid_t sid, short type)
 	mRunning 	= 0;
 	mWriting 	= 0;
 	mReading 	= 0;
-	switch(type) {
+	switch(type) 
+	{
 		case VIDEO_RECV_MSG:
 			// if(!mTaskBase)
 			// 	mTaskBase = new TaskVideoRecv( this, mSid );
@@ -185,7 +186,7 @@ Session :: Session( Sid_t sid, short type)
 	}
 }
 
-Session :: Session( Sid_t sid, short type, char*filepath)
+Session :: Session( Sockid_t sid, short type, char*filepath)
 			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
@@ -202,7 +203,8 @@ Session :: Session( Sid_t sid, short type, char*filepath)
 	mRunning 	= 0;
 	mWriting 	= 0;
 	mReading 	= 0;
-	switch(type) {
+	switch(type) 
+	{
 		case VIDEO_RECV_MSG:
 			// if(!mTaskBase)
 			// 	mTaskBase = new TaskVideoRecv( this, mSid, filepath );
@@ -214,7 +216,7 @@ Session :: Session( Sid_t sid, short type, char*filepath)
 	}
 }
 
-Session :: Session( Sid_t sid, short type, void*surface)
+Session :: Session( Sockid_t sid, short type, void*surface)
 			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
@@ -248,7 +250,7 @@ Session :: Session( Sid_t sid, short type, void*surface)
 	}
 }
 
-Session :: Session( Sid_t sid, short type, char*filepath, void*surface)
+Session :: Session( Sockid_t sid, short type, char*filepath, void*surface)
 			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
@@ -265,7 +267,8 @@ Session :: Session( Sid_t sid, short type, char*filepath, void*surface)
 	mRunning 	= 0;
 	mWriting 	= 0;
 	mReading 	= 0;
-	switch(type) {
+	switch(type) 
+	{
 		case VIDEO_RECV_MSG:
 			// if(!mTaskBase) {
 			// 	mTaskBase = new TaskVideoRecv( this, mSid, filepath );
@@ -282,7 +285,10 @@ Session :: Session( Sid_t sid, short type, char*filepath, void*surface)
 	}
 }
 
-Session :: Session( Sid_t sid, short type, char*remoteFile, char*saveFile)
+/**
+ * files receive session
+ */
+Session :: Session( Sockid_t sid, short type, char*remoteFile, char*saveFile)
 			:mHeadLenConst(sizeof(NET_HEAD))
 			,mSid(sid)
 			,mTaskBase(NULL)
@@ -299,7 +305,8 @@ Session :: Session( Sid_t sid, short type, char*remoteFile, char*saveFile)
 	mRunning 	= 0;
 	mWriting 	= 0;
 	mReading 	= 0;
-	switch(type) {
+	switch(type) 
+	{
 		case VIDEO_RECV_MSG:
 			// if(!mTaskBase) {
 			// 	mTaskBase = new TaskVideoRecv( this, mSid, remoteFile );
@@ -343,17 +350,6 @@ Session :: ~Session()
 	}
 }
 
-void Session :: setSurface(void *surface) {
-	#ifdef __ANDROID__
-		// if(typeid(TaskVideoRealSend)==typeid(*mTaskBase)) {
-		// 	TaskVideoRealSend * realTast = (TaskVideoRealSend*)mTaskBase;
-		// 	realTast->setSurface(surface);
-
-		// 	GLOGE("TaskVideoRealSend setSurface\n");
-		// }
-	#endif
-}
-
 int Session :: setHeartBeat() {
 	return mTaskBase!=NULL?mTaskBase->setHeartCount():0;
 }
@@ -361,7 +357,7 @@ int Session :: setHeartBeat() {
 int Session :: recvEx(char*pData, int len) {
 	int recvCount = 0, recvRet = 0;
 	do{
-		recvRet = recv(mSid.mKey, pData+recvCount, len-recvCount, 0);
+		recvRet = recv(mSid.sid, pData+recvCount, len-recvCount, 0);
 		if(recvRet<=0)
 			return recvRet;
 
@@ -379,7 +375,7 @@ int Session :: readBuffer() {
 	else
 	{
 		if(mbRecvHead) {
-			ret = recv(mSid.mKey, mReadBuff+mHasRecvLen, mHeadLenConst-mHasRecvLen, 0);
+			ret = recv(mSid.sid, mReadBuff+mHasRecvLen, mHeadLenConst-mHasRecvLen, 0);
 			if(ret>0) {
 				mHasRecvLen  += ret;
 				if(mHasRecvLen==mHeadLenConst) {
@@ -411,11 +407,14 @@ int Session :: writeBuffer() {
 	return ret;
 }
 
-int Session ::recvPackData() {
-	int ret = recv(mSid.mKey, mReadBuff+mHeadLenConst+mHasRecvLen, mTotalDataLen-mHasRecvLen, 0);
-	if(ret>0) {
+int Session ::recvPackData() 
+{
+	int ret = recv(mSid.sid, mReadBuff+mHeadLenConst+mHasRecvLen, mTotalDataLen-mHasRecvLen, 0);
+	if(ret>0) 
+	{
 		mHasRecvLen += ret;
-		if(mHasRecvLen==mTotalDataLen) {
+		if(mHasRecvLen==mTotalDataLen) 
+		{
 
 		    int lValueLen, dataType=-1;
 		    char acValue[256] = {0};	//new char[256];
@@ -424,7 +423,8 @@ int Session ::recvPackData() {
 		    PROTO_GetValueByName(mReadBuff, (char*)"play path", acValue, &lValueLen);
 		    if(lValueLen>0)
 		    	dataType 	= 0;
-		    else {
+		    else 
+			{
 		    	PROTO_GetValueByName(mReadBuff, (char*)"get path", acValue, &lValueLen);
 		    	if(lValueLen>0)
 		    		dataType = 1;
@@ -437,12 +437,14 @@ int Session ::recvPackData() {
 		    }
 		    log_info("filename:%s cmd:%d dataType:%d\n", acValue, pCmdbuf->dwCmd, dataType);
 
-		    if(access(acValue, F_OK)!=0) {
+		    if(access(acValue, F_OK)!=0) 
+			{
 		    	log_error("filename %s is no exist.\n",acValue);
 		    	return 0;
 		    }
 
-			switch(dataType) {
+			switch(dataType) 
+			{
 				case 0:
 					// mTaskBase = new TaskVideoSend( this, mSid, acValue );
 					break;
@@ -451,9 +453,9 @@ int Session ::recvPackData() {
 					mTaskBase = new TaskFileSend( this, mSid, acValue );
 					break;
 				case 2:
-		#ifdef __ANDROID__
+					#ifdef __ANDROID__
 					// mTaskBase = new TaskVideoRealSend( this, mSid, acValue );
-		#endif
+					#endif
 					break;
 			}
 			mTotalDataLen = 0;
@@ -466,6 +468,113 @@ int Session ::recvPackData() {
 		}
 	}
 	return ret;
+}
+
+void addEvent( Session * session, short events, int fd , void (*callback)(int, short, void *))
+{
+	EventGlobal * eventArg = (EventGlobal*)session->getArg();
+
+	// if( ( events & EV_WRITE ) && (0 == session->getWriting()) ) 
+	// {
+	// 	session->setWriting( 1 );
+
+	// 	struct event*pEvent=session->getWriteEvent();
+
+	// 	if( fd < 0 ) 
+	// 		fd = EVENT_FD( pEvent );
+
+	// 	event_set( pEvent, fd, events, callback, session );
+	// 	event_base_set( eventArg->getEventBase(), pEvent );
+
+	// 	struct timeval timeout;
+	// 	memset( &timeout, 0, sizeof( timeout ) );
+	// 	timeout.tv_sec = eventArg->getTimeout();
+	// 	event_add( pEvent, &timeout );
+	// }
+
+	if( (events & EV_READ) && (0 == session->getReading()) )
+	{
+		session->setReading( 1 );
+
+		if( fd < 0 ) 
+			fd = EVENT_FD( session->getWriteEvent() );
+
+		struct event*pEvent=session->getReadEvent();
+		event_set( pEvent, fd, events, callback, session );
+		event_base_set( eventArg->getEventBase(), pEvent );
+
+		struct timeval timeout;
+		memset( &timeout, 0, sizeof( timeout ) );
+		timeout.tv_sec = eventArg->getTimeout();
+		event_add( pEvent, &timeout );
+	}
+}
+
+int Session :: addReadEvent(void (*callback)(int, short, void *))
+{
+	if(0 == getReading())
+	{
+		EventGlobal * eventArg = (EventGlobal*)getArg();
+		//struct event* pEvent = getReadEvent();
+		//event_set(mReadEvent, mSid.sid, EV_READ|EV_PERSIST, callback, this );
+		//event_base_set( eventArg->getEventBase(), mReadEvent );
+
+		addEvent(this, EV_READ, mSid.sid, onRead);
+
+		//EventActor::addEvent( this, EV_READ, mSid.sid );
+		// struct timeval timeout;
+		// memset( &timeout, 0, sizeof( timeout ) );
+		// timeout.tv_sec = eventArg->getTimeout();
+		// event_add( pEvent, &timeout );
+
+		setReading( 1 );
+
+		log_warn("addReadEvent.");
+	}
+	//EventActor::addEvent( this, EV_READ, mSid.sid );
+}
+
+void Session :: onRead( int fd, short events, void * arg )
+{
+	Session* session = (Session*)arg;
+	session->setReading( 0 );
+	Sockid_t sid = session->getSid();
+	int tempFd = fd;
+
+	if( EV_READ & events ) 
+	{
+		int ret = session->readBuffer();
+		if((0==ret)&&session)
+		{
+			log_warn("read zero:%d\n", ret);
+
+			EventGlobal* eventArg = (EventGlobal*)session->getArg();
+			if(eventArg)
+			{
+				Session* sessRemoved = eventArg->getSessionManager()->remove( fd );
+				event_del( session->getReadEvent() );
+				event_del( session->getWriteEvent() );
+				event_del( session->getTimeEvent() );
+
+				if(sessRemoved==session) 
+				{
+					delete session;
+					session = NULL;
+					log_warn("session deleted socketid is:%d", tempFd);
+				}
+			}
+
+			if(fd>0)
+			{
+				close( fd );
+				fd = -1;
+			}
+
+			return;
+		}
+	}//if
+
+	addEvent( session, EV_READ, fd ,onRead);
 }
 
 struct event * Session :: getReadEvent()
@@ -493,7 +602,7 @@ void * Session :: getArg()
 	return mArg;
 }
 
-Sid_t Session :: getSid()
+Sockid_t Session :: getSid()
 {
 	return mSid;
 }

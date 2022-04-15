@@ -11,30 +11,30 @@
 
 class Session;
 
-typedef struct tagSid {
-	uint16_t mKey;	//sockid like
-	uint16_t mSeq;	//index like
+typedef struct tagSockid {
+	uint16_t sid;	//sockid like
+	uint16_t seq;	//index like
 
 	enum {
 		eTimerKey = 0,
 		eTimerSeq = 65535
 	};
-} Sid_t;
+} Sockid_t;
 
 class TaskBase {
 
 public:
-	TaskBase( Sid_t sid );
-	TaskBase( Sid_t &sid, char*filename);
-	TaskBase( Session*sess, Sid_t&sid, char*filename);
+	TaskBase( Sockid_t sid );
+	TaskBase( Sockid_t &sid, char*filename);
+	TaskBase( Session*sess, Sockid_t&sid, char*filename);
 	virtual ~TaskBase();
 	virtual int setHeartCount();
 	virtual int readBuffer();
 	virtual int writeBuffer();
 
 protected:
-	Sid_t mSid;
-	int   mHeartCount;
+	Sockid_t mSid;
+	int   	 mHeartCount;
 };
 
 

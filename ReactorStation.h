@@ -31,7 +31,7 @@ class ReactorStation {
 		static void *eventLoop( void * arg );
 		static void sigHandler( int, short, void * arg );
 
-		EventGlobal mEventArg;
+		EventGlobal mEveGlobal;
 		int mIsShutdown;
 		int mIsRunning;
 		int mTimeout;

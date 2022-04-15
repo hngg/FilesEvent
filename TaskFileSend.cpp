@@ -23,7 +23,7 @@
 #define 	SEG_FRAME_COUNT 10
 
 
-	TaskFileSend::TaskFileSend( Session*sess, Sid_t& sid, char*filename )
+	TaskFileSend::TaskFileSend( Session*sess, Sockid_t& sid, char*filename )
 				:mPackHeadLen(sizeof(NET_CMD))
 				,TaskBase(sid)
 				,mSess(sess)
@@ -173,7 +173,7 @@
 		int leftLen = len, iRet = 0;
 
 		struct timeval timeout;
-		int sockId = mSid.mKey;
+		int sockId = mSid.sid;
 		do {
 
 			iRet = send(sockId, data+len-leftLen, leftLen, 0);
@@ -265,7 +265,7 @@
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		if(mRecvBuffer.bProcCmmd) 
 		{
-			ret = recv(mSid.mKey, mRecvBuffer.cmmd+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
+			ret = recv(mSid.sid, mRecvBuffer.cmmd+hasRecvLen, mPackHeadLen-hasRecvLen, 0);
 			if(ret>0) 
 			{
 				hasRecvLen+=ret;
@@ -290,7 +290,7 @@
 	int TaskFileSend::recvPackData() 
 	{
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
-		int ret = recv(mSid.mKey, mRecvBuffer.cmmd+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
+		int ret = recv(mSid.sid, mRecvBuffer.cmmd+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
 		//GLOGE("-------------------recvPackData ret:%d\n",ret);
 		if(ret>0) 
 		{

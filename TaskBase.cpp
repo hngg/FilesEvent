@@ -1,21 +1,21 @@
 #include "TaskBase.h"
 
 
-	TaskBase::TaskBase( Sid_t sid )
+	TaskBase::TaskBase( Sockid_t sid )
 			:mSid(sid)
 			,mHeartCount(0)
 	{
 
 	}
 
-	TaskBase::TaskBase( Sid_t &sid, char*filename)
+	TaskBase::TaskBase( Sockid_t &sid, char*filename)
 			:mSid(sid)
 			,mHeartCount(0)
 	{
 
 	}
 
-	TaskBase::TaskBase(  Session*sess, Sid_t&sid, char*filename)
+	TaskBase::TaskBase(  Session*sess, Sockid_t&sid, char*filename)
 			:mSid(sid)
 			,mHeartCount(0)
 	{

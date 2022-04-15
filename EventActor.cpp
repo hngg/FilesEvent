@@ -66,13 +66,15 @@ int EventGlobal ::Create()
 int EventGlobal ::Destroy()
 {
 	//do clean
-	if(mSessionManager!=NULL) {
+	if(mSessionManager!=NULL) 
+	{
 		log_warn("Manager session count:%d", mSessionManager->getCount());
 		delete mSessionManager;
 		mSessionManager = NULL;
 	}
 
-	if(mEventBase) {
+	if(mEventBase) 
+	{
 		event_destroy();
 		mEventBase = NULL;
 	}
@@ -124,7 +126,8 @@ void EventActor :: onAccept( int listenFd, short events, void * arg )
 		return ;
 
 	clientFD = accept( listenFd, (struct sockaddr *)&clientAddr, &clientLen );
-	if( -1 == clientFD ) {
+	if( -1 == clientFD ) 
+	{
 		log_error("accept failed errno:%d.", errno);
 		return;
 	}
@@ -136,17 +139,18 @@ void EventActor :: onAccept( int listenFd, short events, void * arg )
 		log_error("failed to set client socket non-blocking\n" );
 	}
 
-	Sid_t sid;
-	sid.mKey = clientFD;
-	eventArg->getSessionManager()->get( sid.mKey, &sid.mSeq );
+	Sockid_t sid;
+	sid.sid = clientFD;
+	eventArg->getSessionManager()->get( sid.sid, &sid.seq );
 
 	char clientIP[ 32 ] = { 0 };
 	IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
 	log_warn( "clientIP: %s clientFD:%d",clientIP, clientFD);
 
 	Session * session = new Session( sid );
-	if( NULL != session ) {
-		eventArg->getSessionManager()->put( sid.mKey, session, &sid.mSeq );
+	if( NULL != session ) 
+	{
+		eventArg->getSessionManager()->put( sid.sid, session, &sid.seq );
 		session->setArg( eventArg );
 
 		event_set( session->getReadEvent(),  clientFD, EV_READ,  onRead, session );
@@ -154,7 +158,7 @@ void EventActor :: onAccept( int listenFd, short events, void * arg )
 		addEvent(  session, EV_READ, clientFD );
 
 		//event_set( session->getTimeEvent(), clientFD, EV_TIMEOUT, onTimer, session );
-		evtimer_set(session->getTimeEvent(), onTimer, session);//useful
+		evtimer_set(session->getTimeEvent(), onTimer, session);	//useful
 		addEvent(  session, EV_TIMEOUT, clientFD );
 
 		struct timeval timeout;
@@ -162,7 +166,7 @@ void EventActor :: onAccept( int listenFd, short events, void * arg )
 		timeout.tv_sec 	= 0;
 		timeout.tv_usec = TIMEOUT_US;
 		evtimer_add( session->getTimeEvent(), &timeout );
-		//addEvent( session, EV_WRITE, clientFD );
+		addEvent( session, EV_WRITE, clientFD );
 
 		if( eventArg->getSessionManager()->getCount() > eventArg->getMaxConnections()
 			/*|| eventArg->getInputResultQueue()->getLength() >= acceptArg->mReqQueueSize*/ ) {
@@ -179,10 +183,14 @@ void EventActor :: onAccept( int listenFd, short events, void * arg )
 			session->setStatus( Session::eExit );
 
 			addEvent( session, EV_WRITE, clientFD );
-		} else {
+		} 
+		else 
+		{
 			log_info("doStart.\n");
 		}
-	} else {
+	} 
+	else 
+	{
 		close( clientFD );
 		log_error("Out of memory, cannot allocate session object!\n" );
 	}
@@ -191,31 +199,39 @@ void EventActor :: onAccept( int listenFd, short events, void * arg )
 
 void EventActor :: onRead( int fd, short events, void * arg )
 {
-	Session * session = (Session*)arg;
+	Session* session = (Session*)arg;
 	session->setReading( 0 );
-	Sid_t sid = session->getSid();
+	Sockid_t sid = session->getSid();
+	int tempFd = fd;
 
-	if( EV_READ & events ) {
-
+	if( EV_READ & events ) 
+	{
 		int ret = session->readBuffer();
-		if(ret==0)
+		if((0==ret)&&session)
 		{
-			EventGlobal * eventArg = (EventGlobal*)session->getArg();
-			eventArg->getSessionManager()->remove( fd );
-			event_del( session->getReadEvent() );
-			event_del( session->getWriteEvent() );
-			event_del( session->getTimeEvent() );
+			log_warn("read zero:%d\n", ret);
 
-			delete session;
-			session = NULL;
+			EventGlobal* eventArg = (EventGlobal*)session->getArg();
+			if(eventArg)
+			{
+				Session* sessRemoved = eventArg->getSessionManager()->remove( fd );
+				event_del( session->getReadEvent() );
+				event_del( session->getWriteEvent() );
+				event_del( session->getTimeEvent() );
+
+				if(sessRemoved==session) 
+				{
+					delete session;
+					session = NULL;
+					log_warn("session deleted socketid is:%d", tempFd);
+				}
+			}
 
 			if(fd>0)
 			{
 				close( fd );
 				fd = -1;
 			}
-			
-			log_warn("read zero:%d\n", ret);
 
 			return;
 		}
@@ -233,10 +249,11 @@ void EventActor :: onWrite( int fd, short events, void * arg )
 
 	session->setWriting( 0 );
 
-	Sid_t sid = session->getSid();
+	Sockid_t sid = session->getSid();
 	//GLOGW("onWrite fd:%d sid:%d",fd,session->getSid().mKey);
 
-	if( EV_WRITE & events ) {
+	if( EV_WRITE & events ) 
+	{
 		ret = session->writeBuffer();
 	}
 
@@ -342,16 +359,17 @@ void EventActor :: addEvent( Session * session, short events, int fd )
 {
 	EventGlobal * eventArg = (EventGlobal*)session->getArg();
 
-	if( ( events & EV_WRITE ) && (0 == session->getWriting()) ) {
+	if( ( events & EV_WRITE ) && (0 == session->getWriting()) ) 
+	{
 		session->setWriting( 1 );
 
 		struct event*pEvent=session->getWriteEvent();
 
-		if( fd < 0 ) fd = EVENT_FD( pEvent );
+		if( fd < 0 ) 
+			fd = EVENT_FD( pEvent );
 
 		event_set( pEvent, fd, events, onWrite, session );
 		event_base_set( eventArg->getEventBase(), pEvent );
-
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
@@ -359,10 +377,12 @@ void EventActor :: addEvent( Session * session, short events, int fd )
 		event_add( pEvent, &timeout );
 	}
 
-	if( (events & EV_READ) && (0 == session->getReading()) ) {
+	if( (events & EV_READ) && (0 == session->getReading()) )
+	{
 		session->setReading( 1 );
 
-		if( fd < 0 ) fd = EVENT_FD( session->getWriteEvent() );
+		if( fd < 0 ) 
+			fd = EVENT_FD( session->getWriteEvent() );
 
 		struct event*pEvent=session->getReadEvent();
 		event_set( pEvent, fd, events, onRead, session );
