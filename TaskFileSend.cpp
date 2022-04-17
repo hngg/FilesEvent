@@ -5,22 +5,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "TaskFileSend.h"
-#include "BufferCache.h"
-#include "EventActor.h"
-
 #include "event.h"
 #include "protocol.h"
 #include "net_utils.h"
-
-//#define TAG "TaskFileSend"
 #include "basedef.h"
 
-#undef   _FILE_OFFSET_BITS
-#define  _FILE_OFFSET_BITS	64
-
-
-#define 	SEG_FRAME_COUNT 10
+#include "Session.h"
+#include "TaskFileSend.h"
+#include "BufferCache.h"
 
 
 	TaskFileSend::TaskFileSend( Session*sess, Sockid_t& sid, char*filename )
@@ -70,7 +62,6 @@
 		log_warn("file %s len:%u", filename, mFileLen);//get_filesize(filename)
 	}
 
-
 	TaskFileSend::~TaskFileSend() 
 	{
 		delete mInBuffer;
@@ -110,7 +101,6 @@
 		{
 			if(mHasReadLen<mFileLen) 
 			{
-
 				if(mMsgQueue.getSize()>0) 
 				{
 					int val = 0;
@@ -139,7 +129,6 @@
 				cmd->dwLength 			= mSendBuffer.dataLen+sizeof(FILE_GET); 	//cmd incidental length
 				frame->nLength  		= mSendBuffer.dataLen;
 
-
 				mHasReadLen 			+= mSendBuffer.dataLen;
 
 				mFrameCount++;
@@ -156,7 +145,8 @@
 		return ret;
 	}
 
-	int TaskFileSend::setHeartCount() {
+	int TaskFileSend::setHeartCount() 
+	{
 //			mMsgQueue.push(MODULE_MSG_PING);
 //
 //			if( !mbSendingData)
@@ -210,7 +200,8 @@
 			else
 				log_error("tcpSendData cmd errno:%d ret:%d.", errno, ret);
 
-			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) {
+			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) 
+			{
 				mSendBuffer.setToVideo();
 			}
 		}
@@ -222,7 +213,8 @@
 			else
 				log_error("tcpSendData dta errno:%d ret:%d .", errno, ret);
 
-			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) {
+			if(mSendBuffer.hasProcLen == mSendBuffer.totalLen) 
+			{
 				mSendBuffer.reset();
 			}
 		}
@@ -281,7 +273,8 @@
 				}
 			}
 		}//
-		else{
+		else
+		{
 			ret = recvPackData();
 		}
 		return ret;
@@ -297,7 +290,6 @@
 			hasRecvLen += ret;
 			if(hasRecvLen==mRecvBuffer.totalLen) 
 			{
-
 				int lValueLen;
 			    char acValue[256] = {0};	//new char[256];
 			    memset(acValue, 0, 256);
@@ -316,7 +308,8 @@
 						memset(acValue, 0, 256);
 						PROTO_GetValueByName(mRecvBuffer.cmmd, (char*)"tmend", acValue, &lValueLen);
 						log_info("tmend:%d",atoi(acValue));
-						EventActor::addEvent( mSess, EV_WRITE, -1 );
+						//Session::addEvent( mSess, EV_WRITE, -1 );
+						mSess->addWriteEvent();
 					}
 					else if(strcmp(acValue, "setpause") == 0) 
 					{
@@ -328,7 +321,8 @@
 					else if(strcmp(acValue, "send") == 0) 
 					{
 						mbSendingData = true;
-						EventActor::addEvent( mSess, EV_WRITE, -1 );
+						//EventActor::addEvent( mSess, EV_WRITE, -1 );
+						mSess->addWriteEvent();
 					}
 				}
 			    //GLOGE("recv total:%s", mRecvBuffer.buff);

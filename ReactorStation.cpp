@@ -28,12 +28,14 @@
 		mTimeout = timeout > 0 ? timeout : mTimeout;
 	}
 
-	EventGlobal&  ReactorStation :: getEventArg() {
+	EventGlobal&  ReactorStation :: getEventArg() 
+	{
 		return mEveGlobal;
 	}
 
 	int ReactorStation :: startup() 
 	{
+		log_warn("ReactorStation startup running:%d", isRunning());
 		if(isRunning()==0) 
 		{
 			mIsShutdown = 0;
@@ -58,9 +60,7 @@
 			tv.tv_usec=10;
 			event_loopexit(&tv);
 
-			mEveGlobal.Destroy();
-
-			log_warn("ReactorStation shutdown function.");
+			log_warn("ReactorStation shutdown end.");
 		}
 	}
 
@@ -114,34 +114,31 @@
 		/* Don't die with SIGPIPE on remote read shutdown. That's dumb. */
 		signal( SIGPIPE, SIG_IGN );
 
-		int ret = 0;
 
-		if( 0 == ret ) 
+		// Clean close on SIGINT or SIGTERM.
+		struct event evSigInt, evSigTerm;
+		signal_set( &evSigInt, SIGINT,  sigHandler, this );
+		event_base_set( mEveGlobal.getEventBase(), &evSigInt );
+		signal_add( &evSigInt, NULL);
+
+		signal_set( &evSigTerm, SIGTERM, sigHandler, this );
+		event_base_set( mEveGlobal.getEventBase(), &evSigTerm );
+		signal_add( &evSigTerm, NULL);
+
+
+		/* Start the event loop. */
+		while( 0 == mIsShutdown ) 
 		{
-			// Clean close on SIGINT or SIGTERM.
-			struct event evSigInt, evSigTerm;
-			signal_set( &evSigInt, SIGINT,  sigHandler, this );
-			event_base_set( mEveGlobal.getEventBase(), &evSigInt );
-			signal_add( &evSigInt, NULL);
-
-			signal_set( &evSigTerm, SIGTERM, sigHandler, this );
-			event_base_set( mEveGlobal.getEventBase(), &evSigTerm );
-			signal_add( &evSigTerm, NULL);
-
-
-			/* Start the event loop. */
-			while( 0 == mIsShutdown ) 
-			{
-				event_base_loop( mEveGlobal.getEventBase(), EVLOOP_ONCE );
-			}
-
-			mEveGlobal.Destroy();
-			log_warn("ReactorStation is shutdown.");
-
-			signal_del( &evSigTerm );
-			signal_del( &evSigInt );
+			event_base_loop( mEveGlobal.getEventBase(), EVLOOP_ONCE );
 		}
-		return ret;
+
+		mEveGlobal.Destroy();
+		log_warn("ReactorStation loop__ exit.");
+
+		signal_del( &evSigTerm );
+		signal_del( &evSigInt );
+		
+		return 0;
 	}
 
 	void ReactorStation :: sigHandler( int fd, short event, void * arg ) 

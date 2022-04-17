@@ -7,7 +7,7 @@
 
 #include "event.h"
 
-#include "EventActor.h"
+#include "EventGlobal.h"
 #include "TaskBase.h"
 
 

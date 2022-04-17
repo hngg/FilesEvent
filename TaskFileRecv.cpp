@@ -5,12 +5,9 @@
 
 #include "TaskFileRecv.h"
 #include "BufferCache.h"
-#include "EventActor.h"
 
 #include "event.h"
 #include "h264.h"
-
-//#define TAG "TaskFileRecv"
 #include "basedef.h"
 
 

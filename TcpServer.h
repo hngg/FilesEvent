@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "EventActor.h"
+#include "EventGlobal.h"
 #include "TaskBase.h"
 
 #include "event.h"
@@ -15,25 +15,26 @@
 #define TEST_PORT 31005
 
 // half-sync/half-async thread pool server
-class TcpServer {
-public:
-	TcpServer( const char * bindIP, int port );
-	~TcpServer();
+class TcpServer 
+{
+	public:
+		TcpServer( const char * bindIP, int port );
+		~TcpServer();
 
-	int registerEvent(EventGlobal& evarg);
-	void shutdown();
+		int registerEvent(EventGlobal* evglobal);
+		void shutdown();
+		void setMaxConnections( int maxConnections );
 
-	void setMaxConnections( int maxConnections );
+		static void onAccept( int listenFd, short events, void * arg );
 
-private:
+	private:
+		char mBindIP[ 64 ];
+		int mPort;
+		int mListenFD;
 
-	char mBindIP[ 64 ];
-	int mPort;
-	int mListenFD;
+		int mMaxConnections;
 
-	int mMaxConnections;
-
-	struct event mEvAccept;
+		struct event *mEvAccept;
 };
 
 #endif

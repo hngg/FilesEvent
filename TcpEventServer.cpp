@@ -20,8 +20,10 @@ int main( int argc, char * argv[] )
 	extern char *optarg ;
 	int c ;
 
-	while( ( c = getopt ( argc, argv, "p:t:s:v" )) != EOF ) {
-		switch ( c ) {
+	while( ( c = getopt ( argc, argv, "p:t:s:v" )) != EOF ) 
+	{
+		switch ( c ) 
+		{
 			case 'p' :
 				port = atoi( optarg );
 				break;
@@ -44,18 +46,20 @@ int main( int argc, char * argv[] )
 
 	int count = 0;
 	do{
+
 		log_warn( "______startup begin %d", ++count);
 		ReactorStation station;
 		station.startup();
 
 		TcpServer server( "127.0.0.1", port );
-		server.registerEvent(station.getEventArg());
+		server.registerEvent(&station.getEventArg());
 
 		getchar();
 
 		server.shutdown();
 		station.shutdown();
 		log_warn( "______shutdown done %d", ++count);
+
 	}while(0);
 
 

@@ -31,7 +31,7 @@ OBJECTS = net/buffer.o \
 			BufferCache.o \
 			IOUtils.o \
 			Session.o \
-			EventActor.o \
+			EventGlobal.o \
 			ReactorStation.o \
 			TaskBase.o \
 			TaskFileSend.o \

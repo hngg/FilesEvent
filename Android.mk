@@ -36,7 +36,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				common/net_utils.c \
 				ReactorStation.cpp \
 				BufferCache.cpp \
-				EventActor.cpp \
+				EventGlobal.cpp \
 				IOUtils.cpp \
 				Session.cpp \
 				TaskBase.cpp \
