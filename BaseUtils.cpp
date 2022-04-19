@@ -11,19 +11,75 @@
 ===========================================================================*/
 
 
-// #include <stdlib.h>
-// #include <assert.h>
-
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <arpa/inet.h>
-// #include "basedef.h"
-
-
 #include <stdio.h>
 #include <string.h>
-#include "net_utils.h"
+
 #include "protocol.h"
+
+#include "BaseUtils.h"
+
+
+#ifdef 	__ANDROID__
+
+#include <jni.h>
+
+extern JavaVM*	g_javaVM;
+extern jclass   g_mClass;
+
+int FileRecvCallback( int sockId, int command, int fileLen ) {
+	jint result = -1;
+	JNIEnv*		menv;
+	jobject		mobj;
+	jclass		tmpClass;
+
+	if(NULL == g_mClass) {
+		log_error("g_mClass is null.");
+		return result;
+	}
+
+	if(g_javaVM)
+	{
+		result = g_javaVM->AttachCurrentThread( &menv, NULL);
+		if(NULL == menv) {
+			log_error("GetEnv failed!");
+			return g_javaVM->DetachCurrentThread();
+		}
+	}
+	else
+	{
+		log_error("JavaVM is null!");
+		return result;
+	}
+
+	if(NULL != g_mClass)
+	{
+		tmpClass = menv->GetObjectClass(g_mClass);
+		if(tmpClass == NULL) {
+			log_error("find class error.");
+			return g_javaVM->DetachCurrentThread();
+		}
+		mobj = menv->AllocObject(tmpClass);
+		if(NULL == mobj) {
+			log_error("find jobj error!");
+			return g_javaVM->DetachCurrentThread();
+		}
+
+		jmethodID methodID_func = menv->GetMethodID(tmpClass, "onFileState", "(III)V");// sockid command length
+		if(methodID_func == NULL) {
+			log_error("find method error!");
+			return g_javaVM->DetachCurrentThread();
+		}
+		else {
+			menv->CallVoidMethod(mobj, methodID_func, sockId, command, fileLen);
+			log_error("jcall sockid:%d command:%d fileLen:%d ", sockId, command, fileLen);
+		}
+	}
+
+	return g_javaVM->DetachCurrentThread();
+}
+
+#endif
+
 
 int int2hex2str(char *pValue,int lValue,int lCharLen)
 {

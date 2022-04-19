@@ -7,8 +7,9 @@
 #include "BufferCache.h"
 
 #include "event.h"
-#include "h264.h"
 #include "basedef.h"
+
+#include "BaseUtils.h"
 
 
 enum FILE_RECV_STATUS{
@@ -26,66 +27,6 @@ enum FILE_RECV_STATUS{
 #define	FILE_PATH	"recv.mp4"
 #endif
 
-#ifdef 	__ANDROID__
-
-#include <jni.h>
-
-extern JavaVM*	g_javaVM;
-extern jclass   g_mClass;
-
-int FileRecvCallback( int sockId, int command, int fileLen ) {
-	jint result = -1;
-	JNIEnv*		menv;
-	jobject		mobj;
-	jclass		tmpClass;
-
-	if(NULL == g_mClass) {
-		log_error("g_mClass is null.");
-		return result;
-	}
-
-	if(g_javaVM)
-	{
-		result = g_javaVM->AttachCurrentThread( &menv, NULL);
-		if(NULL == menv) {
-			log_error("GetEnv failed!");
-			return g_javaVM->DetachCurrentThread();
-		}
-	}
-	else
-	{
-		log_error("JavaVM is null!");
-		return result;
-	}
-
-	if(NULL != g_mClass)
-	{
-		tmpClass = menv->GetObjectClass(g_mClass);
-		if(tmpClass == NULL) {
-			log_error("find class error.");
-			return g_javaVM->DetachCurrentThread();
-		}
-		mobj = menv->AllocObject(tmpClass);
-		if(NULL == mobj) {
-			log_error("find jobj error!");
-			return g_javaVM->DetachCurrentThread();
-		}
-
-		jmethodID methodID_func = menv->GetMethodID(tmpClass, "onFileState", "(III)V");// sockid command length
-		if(methodID_func == NULL) {
-			log_error("find method error!");
-			return g_javaVM->DetachCurrentThread();
-		}
-		else {
-			menv->CallVoidMethod(mobj, methodID_func, sockId, command, fileLen);
-			log_error("jcall sockid:%d command:%d fileLen:%d ", sockId, command, fileLen);
-		}
-	}
-
-	return g_javaVM->DetachCurrentThread();
-}
-
-#endif
 
 	// TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid )
 	// 			:mPackHeadLen(sizeof(NET_CMD))
@@ -282,7 +223,6 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 			ret = recvPackData();
 		}
 
-		//GLOGE("--------1-----------recvPackData ret:%d\n",ret);
 		//EventCall::addEvent( mSess, EV_READ, -1 );
 		return ret;
 	}
@@ -310,7 +250,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 					case MODULE_MSG_CONTROL_PLAY: //68
 						break;
 
-					case MODULE_MSG_VIDEO:	//25
+					case MODULE_MSG_FILES:	//25
 						lpFrame 		= (LPFILE_GET)(pCmdbuf->lpData);
 						fwrite(lpFrame->lpData , 1 , lpFrame->nLength , mwFile);
 						fflush(mwFile);
@@ -333,7 +273,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						int len = sprintf(szCmd, "<control name=\"start\" tmstart=\"%d\" tmend=\"%d\" />", 0, mTotalLen);
 						SendCmd(MODULE_MSG_CONTROL_PLAY, 0, szCmd,len + 1);
 
-						#ifdef 	__ANDROID__
+						#ifdef __ANDROID__
 							FileRecvCallback(mSid.sid, RECV_TELL_TOTAL_LENGTH, mTotalLen);
 						#endif
 						break;

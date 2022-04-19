@@ -5,7 +5,6 @@
 
 #include "event.h"
 #include "basedef.h"
-#include "h264.h"
 
 TcpClient :: TcpClient( )
 		:mSockId(0)

@@ -4,7 +4,7 @@
 
 #include <sys/time.h> //->gettimeofday define
 
-#include "h264.h"
+#include "basedef.h"
 #include "TaskBase.h"
 
 class BufferCache;

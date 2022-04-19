@@ -15,7 +15,6 @@
 
 #include "config.h"
 #include "basedef.h"
-#include "h264.h"
 
 //#include "event_msgqueue.h"
 #define MAX_CONNECTIONS 256

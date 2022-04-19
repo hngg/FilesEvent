@@ -7,9 +7,9 @@
 
 #include "event.h"
 #include "protocol.h"
-#include "net_utils.h"
 #include "basedef.h"
 
+#include "BaseUtils.h"
 #include "Session.h"
 #include "TaskFileSend.h"
 #include "BufferCache.h"
@@ -118,7 +118,7 @@
 				LPNET_CMD	 cmd 		= (LPNET_CMD)mSendBuffer.cmmd;
 				LPFILE_GET frame 		= (LPFILE_GET)(cmd->lpData);
 				cmd->dwFlag 			= NET_FLAG;
-				cmd->dwCmd 				= MODULE_MSG_VIDEO;
+				cmd->dwCmd 				= MODULE_MSG_FILES;
 				cmd->dwIndex 			= 0;
 
 				mSendBuffer.createMem(iBuffLen);
@@ -228,9 +228,7 @@
 		switch(iVal) 
 		{
 			case MODULE_MSG_DATAEND:
-			case MODULE_MSG_SEEK_CMPD:
 			case MODULE_MSG_SECTION_END:
-			case MODULE_MSG_EXERET:
 				pCmd->dwFlag 	= NET_FLAG;
 				pCmd->dwCmd 	= iVal;
 				pCmd->dwIndex 	= index;

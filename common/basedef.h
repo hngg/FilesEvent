@@ -3,48 +3,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "glog.h"
-
+#include "protocol.h"
 
 #ifdef __cplusplus
 	  extern "C"{
 #endif
 
 
-// #ifndef TAG
-// #define TAG "@-->"
-// #endif
-
-// #define  LOGTAG true
-// #if LOGTAG
-
-// #ifdef __ANDROID__
-// 	#include <android/log.h>
-// 	#define GLOGV(...)  __android_log_print(ANDROID_LOG_VERBOSE,TAG,__VA_ARGS__)	//black
-// 	#define GLOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,	TAG,  __VA_ARGS__)	//blue
-// 	#define GLOGI(...)  __android_log_print(ANDROID_LOG_INFO,	TAG,  __VA_ARGS__)	//green
-// 	#define GLOGW(...)  __android_log_print(ANDROID_LOG_WARN,	TAG,  __VA_ARGS__)  //yellow
-// 	#define GLOGE(...)  __android_log_print(ANDROID_LOG_ERROR,	TAG,  __VA_ARGS__)  //red
-// #else
-// 	//if __linux__
-// 	#define GLOGD(...)  printf("Filename %s, Function %s, Line %d %s ", __FILE__, __FUNCTION__, __LINE__, TAG); \
-// 						printf(__VA_ARGS__); \
-// 						printf("\n");
-
-// 	#define GLOGB(...)  printf("%s, Line %d %s ", __FILE__, __LINE__, TAG); \
-// 						printf(__VA_ARGS__); \
-// 						printf("\n");
-// 	#define GLOGE GLOGB							
-// 	#define GLOGI GLOGB
-// 	#define GLOGW GLOGB
-// 	#define GLOGV GLOGB
-// #endif
-
-// #endif
-
-typedef unsigned short WORD;
-typedef unsigned long DWORD;
 
 #ifndef false
 #define false	0
@@ -54,30 +22,9 @@ typedef unsigned long DWORD;
 #define true	1
 #endif
 
-//#define NET_FLAT	0xfefdfcfb
-//
-//typedef struct tagNET_CMD
-//{
-//	DWORD dwFlag;
-//	DWORD dwCmd;
-//	DWORD dwIndex;
-//	DWORD dwLength;
-//	char  lpData[];
-//}NET_CMD,*LPNET_CMD;
-//
-//typedef struct tagLOGIN_RET
-//{
-//	long lRet;
-//	int  nLength;
-//	char lpData[1];
-//}LOGIN_RET,*LPLOGIN_RET;
-
-
-
 #ifndef NELEM
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 #endif
-
 
 #ifndef MAX_PACKET_SIZE
 #define MAX_PACKET_SIZE	((60* 1024) - 1)
@@ -96,6 +43,94 @@ typedef unsigned long DWORD;
 #ifndef FILE_BUFFER_LEN
 static const int	FILE_MEMORY_LEN  	= 1024*1024;//512k 1m (1024*1024->1048576)
 #endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#ifndef  CMD_LEN
+#define  CMD_LEN 1500
+#endif
+
+//recv data struct
+struct tagCmdBuffer {
+	char cmmd[CMD_LEN];
+	bool bProcCmmd;
+	int  hasProcLen;
+	int  totalLen;
+	void reset() {
+		bProcCmmd 	= true;
+		hasProcLen 	= 0;
+		totalLen 	= sizeof(NET_CMD);
+		memset(cmmd,0, CMD_LEN);
+	}
+};
+
+struct tagFileProcBuffer {
+	char cmmd[CMD_LEN];
+	bool bProcCmmd;
+
+	int  hasProcLen;
+	int  totalLen;//1500 is cmd len
+	int  dataLen;
+	int  memLen;
+	char *data;
+
+	tagFileProcBuffer() 
+	{
+		data 		= NULL;
+		totalLen 	= 0;
+		dataLen 	= 0;
+		hasProcLen 	= 0;
+		bProcCmmd 	= true;
+	}
+
+	void reset() 
+	{
+		//std::lock_guard<std::mutex> lk(mut);
+		memset(cmmd, 0, CMD_LEN);
+
+		totalLen 	= 0;
+		dataLen 	= 0;
+		hasProcLen 	= 0;
+		bProcCmmd 	= true;
+	}
+
+	void createMem(int len) 
+	{
+		if(data==NULL)
+		{
+			data = (char*)malloc(len);
+			memLen = len;
+		}
+	}
+
+	int maxMemoryLengh()
+	{
+		return memLen;
+	}
+
+	void releaseMem() 
+	{
+		if(data)
+		{
+			free(data);
+			data=NULL;
+			memLen = 0;
+		}
+	}
+
+	bool isSendVideo() 
+	{
+		return bProcCmmd==false;
+	}
+
+	void setToVideo() 
+	{
+		bProcCmmd	= false;
+		hasProcLen 	= 0;
+		totalLen 	= dataLen;
+	}
+};
 
 
 #ifdef __cplusplus

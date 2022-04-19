@@ -33,7 +33,7 @@ LOCAL_SRC_FILES := net/buffer.c \
 				net/signal.c \
 				net/log.c \
 				common/glog.c \
-				common/net_utils.c \
+				BaseUtils.cpp \
 				ReactorStation.cpp \
 				BufferCache.cpp \
 				EventGlobal.cpp \

@@ -27,7 +27,7 @@ OBJECTS = net/buffer.o \
 			net/signal.o \
 			net/log.o \
 			common/glog.o \
-			common/net_utils.o \
+			BaseUtils.o \
 			BufferCache.o \
 			IOUtils.o \
 			Session.o \
