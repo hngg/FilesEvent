@@ -3,7 +3,6 @@
 #include "TcpClient.h"
 #include "TcpServer.h"
 
-
 #include <jni.h>
 #include "basedef.h"
 
@@ -29,6 +28,11 @@ static jboolean StartNetWork(JNIEnv *env, jobject)
 		mStatiion.startup();
 		return true;
 	}
+	else
+	{
+		log_error("___reactor station is running.");
+	}
+	
 	return false;
 }
 
@@ -39,6 +43,10 @@ static jboolean StopNetWork(JNIEnv *env, jobject)
 		mStatiion.shutdown();
 		log_warn("______shutdown done.");
 		return true;
+	}
+	else
+	{
+		log_error("___reactor station is not running.");
 	}
 	return false;
 }
@@ -82,11 +90,11 @@ static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint des
 	if(mpClient==NULL) 
 	{
 		jboolean isOk = JNI_FALSE;
-		const char*rfile = env->GetStringUTFChars(remoteFile, &isOk);
-		const char*sfile = env->GetStringUTFChars(saveFile, &isOk);
-		const char *ip = env->GetStringUTFChars(destip, &isOk);
+		const char*rfile 	= env->GetStringUTFChars(remoteFile, &isOk);
+		const char*sfile 	= env->GetStringUTFChars(saveFile, &isOk);
+		const char*chaip 	= env->GetStringUTFChars(destip, &isOk);
 		mpClient = new TcpClient();
-		ret = mpClient->connect( ip, destport, rfile, sfile );
+		ret = mpClient->connect( chaip, destport, rfile, sfile );
 
 		if(ret < 0) 
 		{
@@ -95,11 +103,11 @@ static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint des
 			return false;
 		}
 
-		mpClient->registerEvent(mStatiion.getEventArg());
+		mpClient->registerEvent(&mStatiion.getEventArg());
 
 		env->ReleaseStringUTFChars(remoteFile, rfile);
 		env->ReleaseStringUTFChars(saveFile, sfile);
-		env->ReleaseStringUTFChars(destip, ip);
+		env->ReleaseStringUTFChars(destip, chaip);
 
 		return true;
 	}

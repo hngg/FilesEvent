@@ -15,7 +15,8 @@ enum FILE_RECV_STATUS{
 	RECV_TELL_TOTAL_LENGTH = 1,	//file total length
 	RECV_TELL_READ_LENGTH,		//current recv length
 	RECV_TELL_END,				//file recv end
-	RECV_TELL_SAVE_DONE			//file save done
+	RECV_TELL_SAVE_DONE,		//file save done
+	RECV_TELL_USE_TIME			//file recv use time
 };
 
 
@@ -86,57 +87,54 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 
 #endif
 
-	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid )
-				:mPackHeadLen(sizeof(NET_CMD))
-				,TaskBase(sid)
-				,mSess(sess)
-				,mRecvDataLen(0)
-				,mRecvHeadLen(0)
-				,mTotalLen(0)
-	{
-		//mCmdBuffer.reset();
-		mRecvBuffer.reset();
-		mRecvBuffer.createMem(FILE_MEMORY_LEN);
+	// TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid )
+	// 			:mPackHeadLen(sizeof(NET_CMD))
+	// 			,TaskBase(sid)
+	// 			,mSess(sess)
+	// 			,mRecvDataLen(0)
+	// 			,mTotalLen(0)
+	// {
+	// 	//mCmdBuffer.reset();
+	// 	mRecvBuffer.reset();
+	// 	mRecvBuffer.createMem(FILE_MEMORY_LEN);
 
-		mwFile = fopen(FILE_PATH, "w");
+	// 	mwFile = fopen(FILE_PATH, "w");
 
-		char lpData[2048];
-		int nLength = sprintf(lpData, "<get path=\"%s\"/>", "/h264/tmp.mp4");
-
-
-		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			log_error("send CMD err:%s", lpData);
-	}
+	// 	char lpData[2048];
+	// 	int nLength = sprintf(lpData, "<get path=\"%s\"/>", "/h264/tmp.mp4");
 
 
-	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile )
-				:mPackHeadLen(sizeof(NET_CMD))
-				,TaskBase(sid)
-				,mSess(sess)
-				,mRecvDataLen(0)
-				,mRecvHeadLen(0)
-				,mTotalLen(0)
-	{
-		//mCmdBuffer.reset();
-		mRecvBuffer.reset();
-		mRecvBuffer.createMem(FILE_MEMORY_LEN);
-
-		mwFile = fopen(FILE_PATH, "w");
-
-		char lpData[2048];
-		int nLength = sprintf(lpData, "<get path=\"%s\"/>", remoteFile);
+	// 	if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
+	// 		log_error("send CMD err:%s", lpData);
+	// }
 
 
-		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			log_error("send CMD err:%s", lpData);
-	}
+	// TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile )
+	// 			:mPackHeadLen(sizeof(NET_CMD))
+	// 			,TaskBase(sid)
+	// 			,mSess(sess)
+	// 			,mRecvDataLen(0)
+	// 			,mTotalLen(0)
+	// {
+	// 	//mCmdBuffer.reset();
+	// 	mRecvBuffer.reset();
+	// 	mRecvBuffer.createMem(FILE_MEMORY_LEN);
+
+	// 	mwFile = fopen(FILE_PATH, "w");
+
+	// 	char lpData[2048];
+	// 	int nLength = sprintf(lpData, "<get path=\"%s\"/>", remoteFile);
+
+
+	// 	if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
+	// 		log_error("send CMD err:%s", lpData);
+	// }
 
 	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile, char*saveFile )
 				:mPackHeadLen(sizeof(NET_CMD))
 				,TaskBase(sid)
 				,mSess(sess)
 				,mRecvDataLen(0)
-				,mRecvHeadLen(0)
 				,mTotalLen(0)
 	{
 		mRecvBuffer.reset();
@@ -240,7 +238,8 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 					mRecvBuffer.bProcCmmd = false;
 					hasRecvLen = 0;
 
-					log_info("playback flag:%08x cmd:%d read event need recv totalLen:%d ret:%d", head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
+					log_info("playback flag:%08x cmd:%d read event need recv totalLen:%d ret:%d", 
+								head->dwFlag, head->dwCmd, mRecvBuffer.totalLen, ret);
 
 					if(head->dwLength>0) 
 					{
@@ -248,13 +247,17 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 					}
 					else
 					{
+						uint64_t tsdiff;
 						switch(head->dwCmd) 
 						{
 							case MODULE_MSG_DATAEND:	//69
-								#ifdef 	__ANDROID__
-									FileRecvCallback(mSid.sid, RECV_TELL_END, 0);
+								gettimeofday(&mEndTime, NULL);
+								tsdiff = (mEndTime.tv_sec-mStartTime.tv_sec)*1000000 + (mEndTime.tv_usec-mStartTime.tv_usec);
+								#ifdef __ANDROID__
+									FileRecvCallback(mSid.sid, RECV_TELL_END, mRecvDataLen);
+									FileRecvCallback(mSid.sid, RECV_TELL_USE_TIME, tsdiff);
 								#endif
-								log_info("MODULE_MSG_DATAEND");
+								log_info("MODULE_MSG_DATAEND use time:%lld ms", tsdiff/1000);
 							break;
 
 							case MODULE_MSG_SECTION_END://70
@@ -293,6 +296,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 		if(ret>0) 
 		{
 			hasRecvLen += ret;
+			
 			if(hasRecvLen==mRecvBuffer.totalLen) 
 			{
 				int lValueLen;
@@ -311,9 +315,9 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						fwrite(lpFrame->lpData , 1 , lpFrame->nLength , mwFile);
 						fflush(mwFile);
 						log_info("frame len:%d", lpFrame->nLength);
-
+						mRecvDataLen += lpFrame->nLength;
 						#ifdef 	__ANDROID__
-							FileRecvCallback(mSid.sid, RECV_TELL_READ_LENGTH, lpFrame->nLength);
+							FileRecvCallback(mSid.sid, RECV_TELL_READ_LENGTH, mRecvDataLen);
 						#endif
 						break;
 
@@ -323,6 +327,7 @@ int FileRecvCallback( int sockId, int command, int fileLen ) {
 						mTotalLen = lpInfo->tmEnd;
 
 						log_info("The file to recv TotalLen:%d", mTotalLen);
+						gettimeofday(&mStartTime, NULL);
 
 						char szCmd[100];
 						int len = sprintf(szCmd, "<control name=\"start\" tmstart=\"%d\" tmend=\"%d\" />", 0, mTotalLen);

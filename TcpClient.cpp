@@ -16,17 +16,7 @@ TcpClient :: TcpClient( )
 
 TcpClient :: ~TcpClient()
 {
-	if(mSockId > 0) 
-	{
-		close(mSockId);
-		mSockId = 0;
-	}
-
-	if(mSession != NULL) 
-	{
-		delete mSession;
-		mSession = NULL;
-	}
+	disConnect();
 }
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile) 
@@ -45,10 +35,10 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 
 int TcpClient :: disConnect() 
 {
-	if(mSockId > 0 && mSession) 
+	if((mSockId > 0) && mSession) 
 	{
-		EventGlobal * eventArg  = (EventGlobal*)mSession->getGlobal();
-		SessionManager *manager = eventArg->getSessionManager();
+		EventGlobal* eventArg   = (EventGlobal*)mSession->getGlobal();
+		SessionManager* manager = eventArg->getSessionManager();
 
 		log_warn("disconnect begin");
 		uint16_t seq;
@@ -57,33 +47,32 @@ int TcpClient :: disConnect()
 			Session* sessRemoved = manager->remove(mSockId);
 			if(sessRemoved)
 			{
-				event_del(mSession->getReadEvent());
-				event_del(mSession->getTimeEvent());
+				event_del(sessRemoved->getReadEvent());
+				event_del(sessRemoved->getTimeEvent());
 				close(mSockId);
-				
-				log_warn("disconnect and manager remove session id:%d seq:%d", mSockId, seq);
+
+				delete sessRemoved;
+				sessRemoved = NULL;
+				mSession = NULL;
+
+				log_warn("disconnect and manager remove session and delete id:%d seq:%d", mSockId, seq);
 
 				mSockId = -1;
 			}
 		}
 
-		if(mSession)
-		{
-			delete mSession;
-			mSession = NULL;
-		}
 		log_warn("disconnect end");
 	}
 	return 0;
 }
 
-int TcpClient :: registerEvent(const EventGlobal& evarg) 
+int TcpClient :: registerEvent(EventGlobal* evglobal) 
 {
-	if(mSession!=NULL) 
+	if(mSession != NULL)
 	{
 		uint16_t seq;
-		mSession->setGlobal( (void*)&evarg );
-		evarg.getSessionManager()->put( mSockId, mSession, &seq );
+		mSession->setGlobal( evglobal );
+		evglobal->getSessionManager()->put( mSockId, mSession, &seq );
 		
 		mSession->addReadEvent();
 

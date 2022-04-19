@@ -19,7 +19,6 @@
 
 	ReactorStation :: ~ReactorStation() 
 	{
-		mEveGlobal.Destroy();
 		log_warn("ActorStation Destroy.");
 	}
 
@@ -56,7 +55,7 @@
 		{
 			mIsShutdown = 1;
 			struct timeval tv;
-			tv.tv_sec=0;
+			tv.tv_sec =0;
 			tv.tv_usec=10;
 			event_loopexit(&tv);
 
@@ -114,7 +113,6 @@
 		/* Don't die with SIGPIPE on remote read shutdown. That's dumb. */
 		signal( SIGPIPE, SIG_IGN );
 
-
 		// Clean close on SIGINT or SIGTERM.
 		struct event evSigInt, evSigTerm;
 		signal_set( &evSigInt, SIGINT,  sigHandler, this );
@@ -125,9 +123,8 @@
 		event_base_set( mEveGlobal.getEventBase(), &evSigTerm );
 		signal_add( &evSigTerm, NULL);
 
-
 		/* Start the event loop. */
-		while( 0 == mIsShutdown ) 
+		while( 0 == mIsShutdown )
 		{
 			event_base_loop( mEveGlobal.getEventBase(), EVLOOP_ONCE );
 		}

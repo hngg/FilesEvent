@@ -69,7 +69,7 @@ int main( int argc, char * argv[] )
 	else
 		usage(argv[0]);
 
-	client.registerEvent(station.getEventArg());
+	client.registerEvent(&station.getEventArg());
 
 	getchar();
 

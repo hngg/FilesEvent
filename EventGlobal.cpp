@@ -38,40 +38,47 @@ EventGlobal :: ~EventGlobal()
 		delete mSessionManager;
 		mSessionManager = NULL;
 	}
-	
-	if(mEventBase) 
-	{
-		event_destroy();
-		mEventBase = NULL;
-	}
 }
 
 int EventGlobal ::Create() 
 {
+	int step = 0;
 	if(mEventBase==NULL)
+	{
 		mEventBase = (struct event_base*)event_init();
+		step++;
+	}
 
 	if(mSessionManager==NULL)
+	{
 		mSessionManager = new SessionManager();
-
+		step++;
+	}
+		
+	log_warn("global create step:%d", step);
 	return 0;
 }
 
 int EventGlobal ::Destroy()
 {
+	int step = 0;
 	//do clean
 	if(mSessionManager!=NULL) 
 	{
 		log_warn("Manager session count:%d", mSessionManager->getCount());
 		delete mSessionManager;
 		mSessionManager = NULL;
+		step++;
 	}
 
 	if(mEventBase) 
 	{
 		event_destroy();
 		mEventBase = NULL;
+		step++;
 	}
+
+	log_warn("global destroy step:%d", step);
 
 	return 0;
 }
