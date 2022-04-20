@@ -21,11 +21,8 @@ all: $(TARGET)
 
 OBJECTS = net/buffer.o \
 			net/epoll.o \
-			net/epoll_sub.o \
 			net/event.o \
-			net/evbuffer.o \
 			net/signal.o \
-			net/log.o \
 			common/glog.o \
 			BaseUtils.o \
 			BufferCache.o \

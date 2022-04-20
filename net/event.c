@@ -1,29 +1,4 @@
-/*
- * Copyright (c) 2000-2004 Niels Provos <provos@citi.umich.edu>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+
 #include "config.h"
 
 #ifdef WIN32
@@ -58,7 +33,7 @@
 
 #include "event.h"
 #include "event-internal.h"
-#include "log.h"
+#include "glog.h"
 
 #ifdef HAVE_SELECT
 extern const struct eventop selectops;
@@ -153,7 +128,7 @@ event_init(void)
 	int i;
 
 	if ((current_base = calloc(1, sizeof(struct event_base))) == NULL)
-		event_err(1, "%s: calloc");
+		log_error("calloc failed.");
 
 	event_sigcb = NULL;
 	event_gotsig = 0;
@@ -171,11 +146,10 @@ event_init(void)
 	}
 
 	if (current_base->evbase == NULL)
-		event_errx(1, "%s: no event mechanism available", __func__);
+		log_error("%s: no event mechanism available", __func__);
 
 	if (getenv("EVENT_SHOW_METHOD")) 
-		event_msgx("libevent using: %s\n",
-			   current_base->evsel->name);
+		log_info("libevent using: %s", current_base->evsel->name);
 
 	/* allocate a single active event queue */
 	event_base_priority_init(current_base, 1);
@@ -217,12 +191,12 @@ event_base_priority_init(struct event_base *base, int npriorities)
 	base->activequeues = (struct event_list **)calloc(base->nactivequeues,
 	    npriorities * sizeof(struct event_list *));
 	if (base->activequeues == NULL)
-		event_err(1, "%s: calloc", __func__);
+		log_error("%s: calloc", __func__);
 
 	for (i = 0; i < base->nactivequeues; ++i) {
 		base->activequeues[i] = malloc(sizeof(struct event_list));
 		if (base->activequeues[i] == NULL)
-			event_err(1, "%s: malloc", __func__);
+			log_error("%s: malloc", __func__);
 		TAILQ_INIT(base->activequeues[i]);
 	}
 
@@ -356,8 +330,8 @@ event_base_loop(struct event_base *base, int flags)
 		gettimeofday(&tv, NULL);
 		if (timercmp(&tv, &base->event_tv, <)) {
 			struct timeval off;
-			event_debug(("%s: time is running backwards, corrected",
-				    __func__));
+			log_debug("%s: time is running backwards, corrected", __func__);
+
 			timersub(&base->event_tv, &tv, &off);
 			timeout_correct(base, &off);
 		}
@@ -370,7 +344,7 @@ event_base_loop(struct event_base *base, int flags)
 		
 		/* If we have no events, we just exit */
 		if (!event_haveevents(base)) {
-			event_debug(("%s: no events registered.", __func__));
+			log_debug("%s: no events registered.", __func__);
 			return (1);
 		}
 
@@ -390,7 +364,7 @@ event_base_loop(struct event_base *base, int flags)
 			done = 1;
 	}
 
-	event_debug(("%s: asked to terminate loop.", __func__));
+	log_debug("%s: asked to terminate loop.", __func__);
 	return (0);
 }
 
@@ -539,13 +513,13 @@ event_add(struct event *ev, struct timeval *tv)
 	const struct eventop *evsel = base->evsel;
 	void *evbase = base->evbase;
 
-	event_debug((
+	log_debug(
 		 "event_add: event: %p, %s%s%scall %p",
 		 ev,
 		 ev->ev_events & EV_READ ? "EV_READ " : " ",
 		 ev->ev_events & EV_WRITE ? "EV_WRITE " : " ",
 		 tv ? "EV_TIMEOUT " : " ",
-		 ev->ev_callback));
+		 ev->ev_callback);
 
 	assert(!(ev->ev_flags & ~EVLIST_ALL));
 
@@ -574,9 +548,9 @@ event_add(struct event *ev, struct timeval *tv)
 		gettimeofday(&now, NULL);
 		timeradd(&now, tv, &ev->ev_timeout);
 
-		event_debug((
-			 "event_add: timeout in %d seconds, call %p",
-			 tv->tv_sec, ev->ev_callback));
+		log_debug(
+			 "event_add: timeout in %ld seconds, call %p",
+			 tv->tv_sec, ev->ev_callback);
 
 		event_queue_insert(base, ev, EVLIST_TIMEOUT);
 	}
@@ -603,8 +577,8 @@ event_del(struct event *ev)
 	const struct eventop *evsel;
 	void *evbase;
 
-	event_debug(("event_del: %p, callback %p",
-		 ev, ev->ev_callback));
+	log_debug("event_del: %p, callback %p",
+		 ev, ev->ev_callback);
 
 	/* An event without a base has not been added */
 	if (ev->ev_base == NULL)
@@ -680,7 +654,7 @@ timeout_next(struct event_base *base, struct timeval *tv)
 	assert(tv->tv_sec >= 0);
 	assert(tv->tv_usec >= 0);
 
-	event_debug(("timeout_next: in %d seconds", tv->tv_sec));
+	log_debug("timeout_next: in %ld seconds", tv->tv_sec);
 	return (0);
 }
 
@@ -715,8 +689,8 @@ timeout_process(struct event_base *base)
 		/* delete this event from the I/O queues */
 		event_del(ev);
 
-		event_debug(("timeout_process: call %p",
-			 ev->ev_callback));
+		log_debug("timeout_process: call %p",
+			 ev->ev_callback);
 		event_active(ev, EV_TIMEOUT, 1);
 	}
 }
@@ -727,7 +701,7 @@ event_queue_remove(struct event_base *base, struct event *ev, int queue)
 	int docount = 1;
 
 	if (!(ev->ev_flags & queue))
-		event_errx(1, "%s: %p(fd %d) not on queue %x", __func__,
+		log_error( "%s: %p(fd %d) not on queue %x", __func__,
 			   ev, ev->ev_fd, queue);
 
 	if (ev->ev_flags & EVLIST_INTERNAL)
@@ -754,7 +728,7 @@ event_queue_remove(struct event_base *base, struct event *ev, int queue)
 		TAILQ_REMOVE(&base->eventqueue, ev, ev_next);
 		break;
 	default:
-		event_errx(1, "%s: unknown queue %x", __func__, queue);
+		log_error( "%s: unknown queue %x", __func__, queue);
 	}
 }
 
@@ -768,7 +742,7 @@ event_queue_insert(struct event_base *base, struct event *ev, int queue)
 		if (queue & EVLIST_ACTIVE)
 			return;
 
-		event_errx(1, "%s: %p(fd %d) already on queue %x", __func__,
+		log_error("%s: %p(fd %d) already on queue %x", __func__,
 			   ev, ev->ev_fd, queue);
 	}
 
@@ -798,7 +772,7 @@ event_queue_insert(struct event_base *base, struct event *ev, int queue)
 		TAILQ_INSERT_TAIL(&base->eventqueue, ev, ev_next);
 		break;
 	default:
-		event_errx(1, "%s: unknown queue %x", __func__, queue);
+		log_error("%s: unknown queue %x", __func__, queue);
 	}
 }
 

@@ -27,11 +27,8 @@ LOCAL_C_INCLUDES += \
 
 LOCAL_SRC_FILES := net/buffer.c \
 				net/epoll.c \
-				net/epoll_sub.c \
 				net/event.c \
-				net/evbuffer.c \
 				net/signal.c \
-				net/log.c \
 				common/glog.c \
 				BaseUtils.cpp \
 				ReactorStation.cpp \

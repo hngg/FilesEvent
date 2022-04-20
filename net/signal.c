@@ -53,7 +53,7 @@
 
 #include "event.h"
 #include "evsignal.h"
-#include "log.h"
+#include "glog.h"
 
 extern struct event_list signalqueue;
 
@@ -75,14 +75,14 @@ evsignal_cb(int fd, short what, void *arg)
 
 	n = read(fd, signals, sizeof(signals));
 	if (n == -1)
-		event_err(1, "%s: read", __func__);
+		log_error("%s: read", __func__);
 	event_add(ev, NULL);
 }
 
 #ifdef HAVE_SETFD
 #define FD_CLOSEONEXEC(x) do { \
         if (fcntl(x, F_SETFD, 1) == -1) \
-                event_warn("fcntl(%d, F_SETFD)", x); \
+                log_warn("fcntl(%d, F_SETFD)", x); \
 } while (0)
 #else
 #define FD_CLOSEONEXEC(x)
@@ -99,7 +99,7 @@ evsignal_init(sigset_t *evsigmask)
 	 * signals that got delivered.
 	 */
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, ev_signal_pair) == -1)
-		event_err(1, "%s: socketpair", __func__);
+		log_error("%s: socketpair", __func__);
 
 	FD_CLOSEONEXEC(ev_signal_pair[0]);
 	FD_CLOSEONEXEC(ev_signal_pair[1]);
@@ -117,7 +117,7 @@ evsignal_add(sigset_t *evsigmask, struct event *ev)
 	int evsignal;
 	
 	if (ev->ev_events & (EV_READ|EV_WRITE))
-		event_errx(1, "%s: EV_SIGNAL incompatible use", __func__);
+		log_error("%s: EV_SIGNAL incompatible use", __func__);
 	evsignal = EVENT_SIGNAL(ev);
 	sigaddset(evsigmask, evsignal);
 	
