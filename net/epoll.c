@@ -96,7 +96,7 @@ struct eventop epollops = {
 #ifdef HAVE_SETFD
 #define FD_CLOSEONEXEC(x) do { \
         if (fcntl(x, F_SETFD, 1) == -1) \
-                log_warn("fcntl(%d, F_SETFD)", x); \
+                event_warn("fcntl(%d, F_SETFD)", x); \
 } while (0)
 #else
 #define FD_CLOSEONEXEC(x)
@@ -128,7 +128,7 @@ epoll_init(void)
 	/* Initalize the kernel queue */
 
 	if ((epfd = epoll_create(nfiles)) == -1) {
-                log_warn("epoll_create");
+                event_warn("epoll_create");
 		return (NULL);
 	}
 
@@ -175,7 +175,7 @@ epoll_recalc(struct event_base *base, void *arg, int max)
 
 		fds = realloc(epollop->fds, nfds * sizeof(struct evepoll));
 		if (fds == NULL) {
-			log_warn("realloc");
+			event_warn("realloc");
 			return (-1);
 		}
 		epollop->fds = fds;
@@ -206,7 +206,7 @@ epoll_dispatch(struct event_base *base, void *arg, struct timeval *tv)
 
 	if (res == -1) {
 		if (errno != EINTR) {
-			log_warn("epoll_wait");
+			event_warn("epoll_wait");
 			return (-1);
 		}
 
@@ -215,7 +215,7 @@ epoll_dispatch(struct event_base *base, void *arg, struct timeval *tv)
 	} else if (evsignal_caught)
 		evsignal_process();
 
-	log_debug("%s: epoll_wait reports %d", __func__, res);
+	event_debug("%s: epoll_wait reports %d", __func__, res);
 
 	for (i = 0; i < res; i++) {
 		int which = 0;

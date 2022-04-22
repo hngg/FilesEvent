@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #include "event.h"
 
@@ -11,30 +12,33 @@
 #include "TaskBase.h"
 
 
-class ReactorStation {
+class ReactorStation 
+{
 	public:
 		ReactorStation( );
 		~ReactorStation();
 
-		EventGlobal& getEventArg();
+		EventGlobal* getEventGlobal();
 
 		int startup();
-		int isRunning();
-		void shutdown();
-		void releaseSessions();
+		int shutdown();
 
-		void setTimeout( int timeout );
+		int isStartup();
+
+		//void setTimeout( int timeout );
+		pthread_mutex_t	 mExitMutex;
 
 	private:
-		int start();
+		int startThread(void * arg);
 		int run();
 		static void *eventLoop( void * arg );
 		static void sigHandler( int, short, void * arg );
 
-		EventGlobal mEveGlobal;
-		int mIsShutdown;
-		int mIsRunning;
+		EventGlobal* mEveGlobal;
+		int mIsStartup;
 		int mTimeout;
+
+		
 };
 
 #endif

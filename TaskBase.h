@@ -24,9 +24,9 @@ typedef struct tagSockid {
 class TaskBase {
 
 public:
-	TaskBase( Sockid_t sid );
-	TaskBase( Sockid_t &sid, char*filename);
-	TaskBase( Session*sess, Sockid_t&sid, char*filename);
+	// TaskBase( Sockid_t sid );
+	// TaskBase( Sockid_t &sid, char*filename);
+	TaskBase( Session* sess, Sockid_t& sid, char* filename, char* saveFile);
 	virtual ~TaskBase();
 	virtual int setHeartCount();
 	virtual int readBuffer();

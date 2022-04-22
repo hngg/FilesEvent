@@ -22,7 +22,7 @@ TcpServer	 	*mpServer		= NULL;
 
 static jboolean StartNetWork(JNIEnv *env, jobject) 
 {
-	if(mStatiion.isRunning() == 0) 
+	if(mStatiion.isStartup() == 0) 
 	{
 		log_warn("______startup begin.");
 		mStatiion.startup();
@@ -38,7 +38,7 @@ static jboolean StartNetWork(JNIEnv *env, jobject)
 
 static jboolean StopNetWork(JNIEnv *env, jobject) 
 {
-	if(mStatiion.isRunning() == 1) 
+	if(mStatiion.isStartup() == 1) 
 	{
 		mStatiion.shutdown();
 		log_warn("______shutdown done.");
@@ -59,7 +59,7 @@ static jboolean StartServer(JNIEnv *env, jobject obj, jstring localip, jint dest
 		const char*ip = env->GetStringUTFChars(localip, &isOk);
 
 		mpServer = new TcpServer(ip, destport);
-		mpServer->registerEvent(&mStatiion.getEventArg());
+		mpServer->registerEvent(mStatiion.getEventGlobal());
 
 		env->ReleaseStringUTFChars(localip, ip);
 	}
@@ -87,7 +87,7 @@ static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint des
 {
 	int ret = 0;
 	g_mClass = (jclass)env->NewGlobalRef(obj);
-	if(mpClient==NULL) 
+	if(NULL == mpClient)
 	{
 		jboolean isOk = JNI_FALSE;
 		const char*rfile 	= env->GetStringUTFChars(remoteFile, &isOk);
@@ -95,15 +95,15 @@ static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint des
 		const char*chaip 	= env->GetStringUTFChars(destip, &isOk);
 		mpClient = new TcpClient();
 		ret = mpClient->connect( chaip, destport, rfile, sfile );
-
 		if(ret < 0) 
 		{
 			delete mpClient;
 			mpClient = NULL;
+			log_error("connect ip:%s port:%d failed.", chaip, destport);
 			return false;
 		}
 
-		mpClient->registerEvent(&mStatiion.getEventArg());
+		mpClient->registerEvent(mStatiion.getEventGlobal());
 
 		env->ReleaseStringUTFChars(remoteFile, rfile);
 		env->ReleaseStringUTFChars(saveFile, sfile);
@@ -116,7 +116,7 @@ static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint des
 
 static jboolean StopFileRecv(JNIEnv *env, jobject)
 {
-	if(mpClient!=NULL)
+	if(mpClient)
 	{
 		mpClient->disConnect();
 		delete mpClient;

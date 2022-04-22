@@ -15,9 +15,9 @@
 #include "BufferCache.h"
 
 
-	TaskFileSend::TaskFileSend( Session*sess, Sockid_t& sid, char*filename )
+	TaskFileSend::TaskFileSend( Session* sess, Sockid_t& sid, char* filename, char* saveFile )
 				:mPackHeadLen(sizeof(NET_CMD))
-				,TaskBase(sid)
+				,TaskBase(sess, sid, filename, saveFile)
 				,mSess(sess)
 				,mRecvDataLen(0)
 				,mRecvHeadLen(0)

@@ -71,9 +71,9 @@ enum FILE_RECV_STATUS{
 	// 		log_error("send CMD err:%s", lpData);
 	// }
 
-	TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile, char*saveFile )
+	TaskFileRecv::TaskFileRecv( Session* sess, Sockid_t& sid, char* remoteFile, char* saveFile )
 				:mPackHeadLen(sizeof(NET_CMD))
-				,TaskBase(sid)
+				,TaskBase(sess, sid, remoteFile, saveFile)
 				,mSess(sess)
 				,mRecvDataLen(0)
 				,mTotalLen(0)

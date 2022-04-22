@@ -11,64 +11,89 @@
 #include "ReactorStation.h"
 #include "basedef.h"
 
+#define EVENT_TIMEOUT 1000 //ms
+
 	ReactorStation :: ReactorStation( )
-		:mIsShutdown(0)
-		,mIsRunning(0)
-		,mTimeout(60) {
+					:mIsStartup(0)
+					,mTimeout(EVENT_TIMEOUT)
+					,mEveGlobal(NULL)
+	{
 	}
 
-	ReactorStation :: ~ReactorStation() 
+	ReactorStation :: ~ReactorStation()
 	{
 		log_warn("ActorStation Destroy.");
 	}
 
-	void ReactorStation :: setTimeout( int timeout )
-	{
-		mTimeout = timeout > 0 ? timeout : mTimeout;
-	}
-
-	EventGlobal&  ReactorStation :: getEventArg() 
+	EventGlobal* ReactorStation :: getEventGlobal()
 	{
 		return mEveGlobal;
 	}
 
-	int ReactorStation :: startup() 
+	/**
+	 * @brief 
+	 * 
+	 * @return int 1 is success, 0 is failed
+	 */
+	int ReactorStation :: startup()
 	{
-		log_warn("ReactorStation startup running:%d", isRunning());
-		if(isRunning()==0) 
+		log_warn("ReactorStation startup global value is %s", (NULL==mEveGlobal)?"null":"no null");
+		if(NULL == mEveGlobal) 
 		{
-			mIsShutdown = 0;
-			
-			mEveGlobal.Create();
-			mEveGlobal.setTimeout(mTimeout);
+			mEveGlobal = new EventGlobal();
+			mEveGlobal->Create();
+			mEveGlobal->setTimeout(mTimeout);
 
+			pthread_mutex_init(&mExitMutex, NULL);
+
+			mIsStartup = 1;
 			run();
 
-			return 0;
+			return 1;
 		}
-		return -1;
+		return 0;
 	}
 
-	void ReactorStation :: shutdown() 
+	/**
+	 * @brief 
+	 * 
+	 * @return int 1 is success, 0 is failed
+	 */
+	int ReactorStation :: shutdown()
 	{
-		if(isRunning()==1) 
+		if(mEveGlobal)
 		{
-			mIsShutdown = 1;
+			mIsStartup = 0;
+
 			struct timeval tv;
-			tv.tv_sec =0;
-			tv.tv_usec=10;
-			event_loopexit(&tv);
+			tv.tv_sec = 0;
+			tv.tv_usec= 10;
+			int rest = event_base_loopexit(mEveGlobal->getEventBase(), &tv);
 
-			log_warn("ReactorStation shutdown end.");
+			pthread_mutex_lock(&mExitMutex);
+			mEveGlobal->Destroy();
+			delete mEveGlobal;
+			mEveGlobal = NULL;
+			pthread_mutex_unlock(&mExitMutex);
+
+			pthread_mutex_destroy(&mExitMutex);
+
+			log_warn("ReactorStation shutdown mIsStartup is:%d exit rest:%d", mIsStartup, rest);
+			
+			return 1;
 		}
+		else
+			log_error("shutdown mEveGlobal is null.");
+
+		return 0;
 	}
 
-	int ReactorStation :: isRunning() 
+	int ReactorStation :: isStartup()
 	{
-		return mIsRunning;
+		return mIsStartup;
 	}
 
-	int ReactorStation :: run() 
+	int ReactorStation :: run()
 	{
 		int ret = -1;
 
@@ -86,7 +111,6 @@
 		} 
 		else 
 		{
-			mIsRunning = 0;
 			log_error( "Unable to create a thread for TCP server, %s", strerror( errno ) ) ;
 		}
 
@@ -95,42 +119,46 @@
 		return ret;
 	}
 
-	void * ReactorStation :: eventLoop( void * arg ) 
+	void* ReactorStation :: eventLoop( void * arg ) 
 	{
 		ReactorStation * station = (ReactorStation*)arg;
 
-		station->mIsRunning = 1;
-
-		station->start();
-
-		station->mIsRunning = 0;
+		pthread_mutex_lock(&station->mExitMutex);
+		station->startThread(arg);
+		pthread_mutex_unlock(&station->mExitMutex);
+		
+		log_warn("eventLoop end.");
 
 		return NULL;
 	}
 
-	int ReactorStation :: start() 
+	int ReactorStation :: startThread(void * arg) 
 	{
 		/* Don't die with SIGPIPE on remote read shutdown. That's dumb. */
 		signal( SIGPIPE, SIG_IGN );
 
+		ReactorStation* station 	= (ReactorStation*)arg;
+		EventGlobal* eveGlobal 		= station->getEventGlobal();
+
 		// Clean close on SIGINT or SIGTERM.
 		struct event evSigInt, evSigTerm;
 		signal_set( &evSigInt, SIGINT,  sigHandler, this );
-		event_base_set( mEveGlobal.getEventBase(), &evSigInt );
+		event_base_set( eveGlobal->getEventBase(), &evSigInt );
 		signal_add( &evSigInt, NULL);
 
 		signal_set( &evSigTerm, SIGTERM, sigHandler, this );
-		event_base_set( mEveGlobal.getEventBase(), &evSigTerm );
+		event_base_set( eveGlobal->getEventBase(), &evSigTerm );
 		signal_add( &evSigTerm, NULL);
 
 		/* Start the event loop. */
-		while( 0 == mIsShutdown )
+		while( 1 == station->isStartup() )
 		{
-			event_base_loop( mEveGlobal.getEventBase(), EVLOOP_ONCE );
+			//log_warn("___________mIsShutdown:%d", mIsShutdown);
+			event_base_loop( eveGlobal->getEventBase(), EVLOOP_NONBLOCK );
 		}
 
-		mEveGlobal.Destroy();
-		log_warn("ReactorStation loop__ exit.");
+		//eveGlobal->Destroy();
+		log_warn("ReactorStation loop___ exit.");
 
 		signal_del( &evSigTerm );
 		signal_del( &evSigInt );
@@ -146,3 +174,7 @@
 		log_error("sigHandler fd:%d event:%d.", fd, event);
 	}
 
+	// void ReactorStation :: setTimeout( int timeout )
+	// {
+	// 	mTimeout = timeout > 0 ? timeout : mTimeout;
+	// }

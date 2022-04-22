@@ -14,7 +14,7 @@ class TaskFileRecv :public TaskBase
 	public:
 		// TaskFileRecv( Session*sess, Sockid_t &sid );
 		// TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile );
-		TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile, char*saveFile );
+		TaskFileRecv( Session* sess, Sockid_t& sid, char* remoteFile, char* saveFile );
 		virtual ~TaskFileRecv();
 		virtual int readBuffer();
 		virtual int writeBuffer();

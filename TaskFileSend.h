@@ -12,7 +12,7 @@ class BufferCache;
 class TaskFileSend :public TaskBase 
 {
 	public:
-		TaskFileSend( Session*sess, Sockid_t& sid, char*filename );
+		TaskFileSend( Session*sess, Sockid_t& sid, char*filename, char*saveFile );
 		virtual ~TaskFileSend();
 
 		virtual int setHeartCount();

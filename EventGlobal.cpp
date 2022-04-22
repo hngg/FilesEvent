@@ -20,10 +20,10 @@
 #include "IOUtils.h"
 
 
-#define TIMEOUT_US 1000000
+#define TIMEOUT_MS 100
 
 EventGlobal :: EventGlobal()
-		:mTimeout(0)
+		:mTimeout(TIMEOUT_MS)
 		,mEventBase(NULL)
 		,mSessionManager(NULL) 
 {
@@ -38,6 +38,8 @@ EventGlobal :: ~EventGlobal()
 		delete mSessionManager;
 		mSessionManager = NULL;
 	}
+
+	log_warn("~destroy");
 }
 
 int EventGlobal ::Create() 
@@ -83,7 +85,7 @@ int EventGlobal ::Destroy()
 	return 0;
 }
 
-struct event_base* EventGlobal :: getEventBase() const 
+struct event_base* EventGlobal :: getEventBase() const
 {
 	return mEventBase;
 }
@@ -108,7 +110,7 @@ void EventGlobal ::setMaxConnections( int connection )
 	mMaxConnections = connection;
 }
 
-int  EventGlobal ::getMaxConnections() const 
+int EventGlobal ::getMaxConnections() const 
 {
 	return mMaxConnections;
 }

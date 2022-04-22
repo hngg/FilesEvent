@@ -56,7 +56,6 @@ class Session
 		int recvEx(char*pData, int len);
 		int recvPackData();
 
-
 		Sockid_t mSid;
 		TaskBase *mTaskBase;
 
@@ -65,7 +64,6 @@ class Session
 		struct event * mTimeEvent;
 
 		void * mArg;
-
 
 		char mStatus;
 		char mRunning;
@@ -95,7 +93,7 @@ class SessionManager
 		int getCount();
 		void put( uint16_t key, Session * session, uint16_t * seq );
 		Session * get( uint16_t key, uint16_t * seq );
-		Session * remove( uint16_t key, uint16_t * seq = NULL );
+		Session * getAndRemove( uint16_t key, uint16_t * seq = NULL );
 
 	private:
 		int mCount;

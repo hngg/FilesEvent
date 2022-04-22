@@ -47,14 +47,19 @@ int TcpServer :: registerEvent(EventGlobal* evglobal)
 {
 	int ret = 0;
 
-	ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
-	log_warn("create listenid:%d ret:%d", mListenFD, ret);
-
-	evglobal->setMaxConnections(mMaxConnections);
-	if(mEvAccept)
+	if(mEvAccept && evglobal)
 	{
+		ret = IOUtils::tcpListen( mBindIP, mPort, &mListenFD, 0 );
+		log_warn("create listenid:%d ret:%d", mListenFD, ret);
+
+		evglobal->setMaxConnections(mMaxConnections);
+
 		event_set( mEvAccept, mListenFD, EV_READ|EV_PERSIST, TcpServer::onAccept, evglobal );
 		event_base_set( evglobal->getEventBase(), mEvAccept );	//set event_base to event
+		struct timeval timeout;
+		memset( &timeout, 0, sizeof( timeout ) );
+		timeout.tv_sec  = evglobal->getTimeout()/1000;
+		timeout.tv_usec = (evglobal->getTimeout()%1000)*1000;
 		event_add( mEvAccept, NULL );
 		log_warn("event_add accept event time:%d", evglobal->getTimeout());
 	}
@@ -66,6 +71,7 @@ void TcpServer :: shutdown()
 {
 	if(mEvAccept)
 	{
+		event_del( mEvAccept );
 		free( mEvAccept );
 		mEvAccept = NULL;
 	}

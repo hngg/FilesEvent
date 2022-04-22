@@ -101,6 +101,18 @@ PJ_DEF(void) pj_log_6(const char *obj, const char *format, ...);
 #define log_strace(fmt, ...)     
 #endif
 
+
+// #define event_error(fmt, ...)
+// #define event_warn(fmt, ...)
+// #define event_info(fmt, ...)
+// #define event_debug(fmt, ...)
+
+#define event_error log_error
+#define event_warn log_warn
+#define event_info log_info
+#define event_debug //log_debug
+
+
 #ifdef __cplusplus
 }
 #endif

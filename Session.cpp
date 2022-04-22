@@ -62,27 +62,40 @@ Session :: ~Session()
 {
 	if(mReadEvent)
 	{
+		event_del(mReadEvent);
+
 		free( mReadEvent );
 		mReadEvent = NULL;
+		log_warn("==mReadEvent free.");
 	}
 
 	if(mWriteEvent)
 	{
+		if(getWriting())
+			event_del(mWriteEvent);
+
 		free( mWriteEvent );
 		mWriteEvent = NULL;
+		log_warn("==mWriteEvent free.");
 	}
 
 	if(mTimeEvent)
 	{
+		//event_del(mTimeEvent);
+
 		free( mTimeEvent );
-		mTimeEvent = NULL;
+		mWriteEvent = NULL;
+		log_warn("==mWriteEvent free.");
 	}
 
 	if(mTaskBase!=NULL) 
 	{
 		delete mTaskBase;
 		mTaskBase = NULL;
+		log_warn("==mTaskBase free.");
 	}
+
+	close(mSid.sid);
 }
 
 int Session :: setHeartBeat() 
@@ -93,7 +106,7 @@ int Session :: setHeartBeat()
 int Session :: recvEx(char*pData, int len) 
 {
 	int recvCount = 0, recvRet = 0;
-	do{
+	do {
 		recvRet = recv(mSid.sid, pData+recvCount, len-recvCount, 0);
 		if(recvRet<=0)
 			return recvRet;
@@ -194,7 +207,7 @@ int Session ::recvPackData()
 					break;
 
 				case 1:
-					mTaskBase = new TaskFileSend( this, mSid, acValue );
+					mTaskBase = new TaskFileSend( this, mSid, acValue, NULL );
 					break;
 				case 2:
 					#ifdef __ANDROID__
@@ -225,7 +238,7 @@ void Session :: addEvent( Session * session, short events, int fd)
 	}
 }
 
-void Session :: addEvent( Session * session, short events, int fd , void (*callback)(int, short, void *))
+void Session :: addEvent( Session * session, short events, int fd, void (*callback)(int, short, void *))
 {
 	EventGlobal * eventArg = (EventGlobal*)session->getGlobal();
 
@@ -243,7 +256,8 @@ void Session :: addEvent( Session * session, short events, int fd , void (*callb
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
-		timeout.tv_sec = eventArg->getTimeout();
+		timeout.tv_sec  = eventArg->getTimeout()/1000;
+		timeout.tv_usec = (eventArg->getTimeout()%1000)*1000;
 		event_add( pEvent, &timeout );
 	}
 
@@ -260,7 +274,8 @@ void Session :: addEvent( Session * session, short events, int fd , void (*callb
 
 		struct timeval timeout;
 		memset( &timeout, 0, sizeof( timeout ) );
-		timeout.tv_sec = eventArg->getTimeout();
+		timeout.tv_sec  = eventArg->getTimeout()/1000;
+		timeout.tv_usec = (eventArg->getTimeout()%1000)*1000;
 		event_add( pEvent, &timeout );
 	}
 }
@@ -325,7 +340,7 @@ void Session :: onRead( int fd, short events, void * arg )
 			EventGlobal* eventArg = (EventGlobal*)session->getGlobal();
 			if(eventArg)
 			{
-				Session* sessRemoved = eventArg->getSessionManager()->remove( fd );
+				Session* sessRemoved = eventArg->getSessionManager()->getAndRemove( fd );
 				event_del( session->getReadEvent() );
 				event_del( session->getWriteEvent() );
 				event_del( session->getTimeEvent() );
@@ -366,7 +381,8 @@ void Session :: onWrite( int fd, short events, void * arg )
 	}
 
 	//>0 need listen,<=0 not do that
-	if(ret==OWN_SOCK_EXIT) {
+	if(ret==OWN_SOCK_EXIT) 
+	{
 	}
 	else if(ret != 0)
 		addEvent( session, EV_WRITE, fd , onWrite);
@@ -382,6 +398,8 @@ void Session :: onTimer( int fd, short events, void * arg )
 	timeout.tv_sec 	= 0;
 	timeout.tv_usec = TIMEOUT_US;
 	evtimer_add(session->getTimeEvent(), &timeout);
+
+	log_warn("timeout :%d us", TIMEOUT_US);
 }
 
 struct event * Session :: getReadEvent()
@@ -525,9 +543,8 @@ Session * SessionManager :: get( uint16_t sid, uint16_t * seq )
 {
 	int row = sid / 1024, col = sid % 1024;
 
-	Session * sess = NULL;
-
-	SessionEntry_t * node = mArray[row];
+	Session* sess 		 = NULL;
+	SessionEntry_t* node = mArray[row];
 	if( NULL != node ) 
 	{
 		sess = node[col].mSession;
@@ -541,23 +558,24 @@ Session * SessionManager :: get( uint16_t sid, uint16_t * seq )
 	return sess;
 }
 
-Session * SessionManager :: remove( uint16_t sid, uint16_t * seq )
+Session * SessionManager :: getAndRemove( uint16_t sid, uint16_t * seq )
 {
 	int row = sid / 1024, col = sid % 1024;
 
 	Session * sessRemoved = NULL;
-
-	SessionEntry_t * node = mArray[ row ];
+	SessionEntry_t* node  = mArray[ row ];
 	if( NULL != node ) 
 	{
 		sessRemoved = node[ col ].mSession;
+		node[ col ].mSession = NULL; //here must set null, else would crash with multi free error:SIGABRT
+
 		if( NULL != seq ) 
 			*seq  = node[ col ].mSeq;
 
-		node[ col ].mSession = NULL;
 		node[ col ].mSeq++;
-
 		mCount--;
+
+		return sessRemoved;
 	}
 
 	return sessRemoved;
