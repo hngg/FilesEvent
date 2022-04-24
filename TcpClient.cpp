@@ -15,7 +15,8 @@ TcpClient :: TcpClient( )
 
 TcpClient :: ~TcpClient()
 {
-	disConnect();
+	//disConnect(); //call this function would segmentfault in x86
+	log_warn("~TcpClient destroy");
 }
 
 int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile) 
@@ -29,6 +30,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 		IOUtils::setBlock( mSockId, 0 );
 		mSession = new Session( mSid, FILE_RECV_MSG, (char*)remoteFile, (char*)saveFile );
 	}
+	
 	return ret;
 }
 
@@ -58,6 +60,7 @@ int TcpClient :: disConnect()
 
 		log_warn("disconnect end");
 	}
+
 	return 0;
 }
 
@@ -76,6 +79,16 @@ int TcpClient :: registerEvent(EventGlobal* evglobal)
 	else
 		log_error("tcpclient registerEvent mSession is NULL.");
 
+	return 0;
+}
+
+int TcpClient :: fetchAndSaveFile(int key, const char* remoteFile, const char* saveFile)
+{
+	return 0;
+}
+
+int TcpClient :: cancelFetchingFile(int key)
+{
 	return 0;
 }
 

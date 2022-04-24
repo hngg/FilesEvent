@@ -12,7 +12,8 @@
 #include "BaseUtils.h"
 
 
-enum FILE_RECV_STATUS{
+enum FILE_RECV_STATUS
+{
 	RECV_TELL_TOTAL_LENGTH = 1,	//file total length
 	RECV_TELL_READ_LENGTH,		//current recv length
 	RECV_TELL_END,				//file recv end
@@ -27,49 +28,6 @@ enum FILE_RECV_STATUS{
 #define	FILE_PATH	"recv.mp4"
 #endif
 
-
-	// TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid )
-	// 			:mPackHeadLen(sizeof(NET_CMD))
-	// 			,TaskBase(sid)
-	// 			,mSess(sess)
-	// 			,mRecvDataLen(0)
-	// 			,mTotalLen(0)
-	// {
-	// 	//mCmdBuffer.reset();
-	// 	mRecvBuffer.reset();
-	// 	mRecvBuffer.createMem(FILE_MEMORY_LEN);
-
-	// 	mwFile = fopen(FILE_PATH, "w");
-
-	// 	char lpData[2048];
-	// 	int nLength = sprintf(lpData, "<get path=\"%s\"/>", "/h264/tmp.mp4");
-
-
-	// 	if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-	// 		log_error("send CMD err:%s", lpData);
-	// }
-
-
-	// TaskFileRecv::TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile )
-	// 			:mPackHeadLen(sizeof(NET_CMD))
-	// 			,TaskBase(sid)
-	// 			,mSess(sess)
-	// 			,mRecvDataLen(0)
-	// 			,mTotalLen(0)
-	// {
-	// 	//mCmdBuffer.reset();
-	// 	mRecvBuffer.reset();
-	// 	mRecvBuffer.createMem(FILE_MEMORY_LEN);
-
-	// 	mwFile = fopen(FILE_PATH, "w");
-
-	// 	char lpData[2048];
-	// 	int nLength = sprintf(lpData, "<get path=\"%s\"/>", remoteFile);
-
-
-	// 	if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-	// 		log_error("send CMD err:%s", lpData);
-	// }
 
 	TaskFileRecv::TaskFileRecv( Session* sess, Sockid_t& sid, char* remoteFile, char* saveFile )
 				:mPackHeadLen(sizeof(NET_CMD))
@@ -232,7 +190,7 @@ enum FILE_RECV_STATUS{
 	{
 		int &hasRecvLen = mRecvBuffer.hasProcLen;
 		int ret = recv(mSid.sid, mRecvBuffer.data+mPackHeadLen+hasRecvLen, mRecvBuffer.totalLen-hasRecvLen, 0);
-		log_info("------recvPackData ret:%d hasRecvLne:%d totalLen:%d", ret, hasRecvLen, mRecvBuffer.totalLen);
+		log_info("===recvPackData ret:%d hasRecvLne:%d totalLen:%d", ret, hasRecvLen, mRecvBuffer.totalLen);
 		if(ret>0) 
 		{
 			hasRecvLen += ret;
@@ -245,8 +203,8 @@ enum FILE_RECV_STATUS{
 				LPNET_CMD pCmdbuf = (LPNET_CMD)mRecvBuffer.data;
 				LPLOGIN_RET lpRet;
 				LPFILE_GET  lpFrame;
-				switch(pCmdbuf->dwCmd) {
-
+				switch(pCmdbuf->dwCmd) 
+				{
 					case MODULE_MSG_CONTROL_PLAY: //68
 						break;
 

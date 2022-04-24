@@ -11,6 +11,7 @@
 #include "TcpServer.h"
 #include "ReactorStation.h"
 
+#define LOCAL_ADDR "127.0.0.1"
 
 int main( int argc, char * argv[] )
 {
@@ -46,13 +47,12 @@ int main( int argc, char * argv[] )
 
 	int count = 0;
 	do{
-
 		log_warn( "______startup begin %d", ++count);
 		ReactorStation station;
 		station.startup();
 
-		TcpServer server( "127.0.0.1", port );
-		server.registerEvent(&station.getEventArg());
+		TcpServer server( LOCAL_ADDR, port );
+		server.registerEvent(station.getEventGlobal());
 
 		getchar();
 

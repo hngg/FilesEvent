@@ -22,7 +22,7 @@
 
 	ReactorStation :: ~ReactorStation()
 	{
-		log_warn("ActorStation Destroy.");
+		log_warn("~ReactorStation Destroy.");
 	}
 
 	EventGlobal* ReactorStation :: getEventGlobal()
@@ -127,7 +127,7 @@
 		station->startThread(arg);
 		pthread_mutex_unlock(&station->mExitMutex);
 		
-		log_warn("eventLoop end.");
+		log_warn("eventLoop end___$");
 
 		return NULL;
 	}

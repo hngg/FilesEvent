@@ -165,6 +165,7 @@ int Session :: writeBuffer()
 	return ret;
 }
 
+//session brooder 
 int Session ::recvPackData() 
 {
 	int ret = recv(mSid.sid, mReadBuff+mHeadLenConst+mHasRecvLen, mTotalDataLen-mHasRecvLen, 0);
@@ -192,6 +193,7 @@ int Session ::recvPackData()
 			    		dataType = 2;
 		    	}
 		    }
+
 		    log_info("filename:%s cmd:%d dataType:%d\n", acValue, pCmdbuf->dwCmd, dataType);
 
 		    if(access(acValue, F_OK)!=0) 
@@ -209,6 +211,7 @@ int Session ::recvPackData()
 				case 1:
 					mTaskBase = new TaskFileSend( this, mSid, acValue, NULL );
 					break;
+
 				case 2:
 					#ifdef __ANDROID__
 					// mTaskBase = new TaskVideoRealSend( this, mSid, acValue );
@@ -224,6 +227,7 @@ int Session ::recvPackData()
 			//GLOGE("Session flag:%08x ret:%d data:%s", pCmdbuf->dwFlag, ret, pCmdbuf->lpData);
 		}
 	}
+
 	return ret;
 }
 
@@ -232,7 +236,8 @@ void Session :: addEvent( Session * session, short events, int fd)
 	if(events & EV_WRITE)
 	{
 		addEvent( session, events, fd , onWrite);
-	}else if(events & EV_READ)
+	}
+	else if(events & EV_READ)
 	{
 		addEvent( session, events, fd , onRead);
 	}
@@ -258,7 +263,7 @@ void Session :: addEvent( Session * session, short events, int fd, void (*callba
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec  = eventArg->getTimeout()/1000;
 		timeout.tv_usec = (eventArg->getTimeout()%1000)*1000;
-		event_add( pEvent, &timeout );
+		event_add( pEvent, NULL );
 	}
 
 	if( (events & EV_READ) && (0 == session->getReading()) )
@@ -276,7 +281,7 @@ void Session :: addEvent( Session * session, short events, int fd, void (*callba
 		memset( &timeout, 0, sizeof( timeout ) );
 		timeout.tv_sec  = eventArg->getTimeout()/1000;
 		timeout.tv_usec = (eventArg->getTimeout()%1000)*1000;
-		event_add( pEvent, &timeout );
+		event_add( pEvent, NULL );//&timeout
 	}
 }
 

@@ -125,6 +125,16 @@ static jboolean StopFileRecv(JNIEnv *env, jobject)
 	return true;
 }
 
+static jboolean FetchAndSaveFile(JNIEnv *env, jobject, int key, jstring remoteFile, jstring saveFile)
+{
+	return true;
+}
+
+static jboolean CancelFetchingFile(JNIEnv *env, jobject, int key)
+{
+	return true;
+}
+
 static JNINativeMethod video_method_table[] = {
 
 	{"StartNetWork", "()Z", (void*)StartNetWork },

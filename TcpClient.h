@@ -18,9 +18,12 @@ class TcpClient
 		virtual ~TcpClient();
 
 		// int connect(const char* destIp, unsigned short destPort, const char*filepath, void *surface); //get h264 show
-		int connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile);
+		int connect(const char* destIp, unsigned short destPort, const char* remoteFile, const char* saveFile);
 		int disConnect();
 		int registerEvent(EventGlobal* evglobal);
+
+		int fetchAndSaveFile(int key, const char* remoteFile, const char* saveFile);
+		int cancelFetchingFile(int key);
 
 	private:
 		int 			mSockId;

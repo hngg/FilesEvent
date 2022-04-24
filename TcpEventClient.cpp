@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include "glog.h"
 #include "TcpServer.h"
 #include "TcpClient.h"
 #include "ReactorStation.h"
@@ -27,7 +28,8 @@ int main( int argc, char * argv[] )
 	int port = TEST_PORT, maxThreads = 10;
 	//const char * serverType = "hahs";
 
-	if(argc<2) {
+	if(argc<2) 
+	{
 		usage(argv[0]);
 		return 0;
 	}
@@ -35,7 +37,8 @@ int main( int argc, char * argv[] )
 	extern char *optarg ;
 	int c ;
 
-	while( ( c = getopt ( argc, argv, "p:t:s:v" )) != EOF ) {
+	while( ( c = getopt ( argc, argv, "p:t:s:v" )) != EOF ) 
+	{
 		switch ( c ) {
 			case 'p' :
 				port = atoi( optarg );
@@ -69,12 +72,14 @@ int main( int argc, char * argv[] )
 	else
 		usage(argv[0]);
 
-	client.registerEvent(&station.getEventArg());
+	client.registerEvent(station.getEventGlobal());
 
 	getchar();
 
 	client.disConnect();
 	station.shutdown();
+
+	log_debug("client exit.");
 
 	return 0;
 }

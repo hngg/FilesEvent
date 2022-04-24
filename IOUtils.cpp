@@ -60,39 +60,46 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 	int ret = 0;
 
 	int listenFd = socket( AF_INET, SOCK_STREAM, 0 );
-	if( listenFd < 0 ) {
+	if( listenFd < 0 ) 
+	{
 		log_error("listen failed, errno %d, %s", errno, strerror( errno ) );
 		return -errno;
 	}
 
 	//0 is set socket nonblock
-	if( setBlock( listenFd, 0) < 0 ) {
+	if( setBlock( listenFd, 0) < 0 ) 
+	{
 		log_error( "failed to set socket to non-blocking" );
 	}
 	
 	int flags = 1;
-	if( setsockopt( listenFd, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof( flags ) ) < 0 ) {
+	if( setsockopt( listenFd, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof( flags ) ) < 0 ) 
+	{
 		log_error( "failed to set setsock to reuseaddr" );
 	}
 
-	if( 0 == tcpdelay ) {
+	if( 0 == tcpdelay ) 
+	{
 		int flags = 1;
-		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
+		if( setsockopt( listenFd, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) 
+		{
 			log_error("failed to set socket to nodelay" );
 		}
 	}
 
 	struct sockaddr_in addr;
 
-	memset( &addr, 0, sizeof( addr ) );
+	memset(&addr, 0, sizeof( addr ));
 	addr.sin_family 		= AF_INET;
 	addr.sin_port 			= htons( bindPort );
 	addr.sin_addr.s_addr 	= inet_addr(ip);//INADDR_ANY;
 
-	if( bind( listenFd, (struct sockaddr*)&addr, sizeof( addr ) ) < 0 ) {
+	if( bind( listenFd, (struct sockaddr*)&addr, sizeof( addr ) ) < 0 ) 
+	{
 		log_error("bind failed, errno %d, %s", errno, strerror( errno ) );
 		return -errno;
 	}
+
 	// if( '\0' != *ip ) {
 	// 	if( 0 != inet_aton( ip, &addr.sin_addr ) ) {
 	// 		log_error("failed to convert %s to inet_addr", ip );
@@ -101,7 +108,8 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 	// }
 
 
-	if( ::listen( listenFd, 5 ) < 0 ) {
+	if( ::listen( listenFd, 5 ) < 0 ) 
+	{
 		close( listenFd );
 		log_error("listen failed, errno %d, %s", errno, strerror( errno ) );
 		return -errno;
@@ -117,14 +125,17 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, i
 {
 	int ret = 0;
 	int sockid = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockid < 0) {
+	if(sockid < 0) 
+	{
 		log_error("socket() failure val:%d", sockid);
 		return -1;
 	}
 
-	if( 0 == tcpdelay ) {
+	if( 0 == tcpdelay ) 
+	{
 		int flags = 1;
-		if( setsockopt( sockid, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) {
+		if( setsockopt( sockid, IPPROTO_TCP, TCP_NODELAY, (char*)&flags, sizeof(flags) ) < 0 ) 
+		{
 			log_error("failed to set socket to nodelay" );
 			ret = -1;
 		}
@@ -136,7 +147,8 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, i
 	addr.sin_port   = htons(destport);
 	addr.sin_addr.s_addr = inet_addr(destip);
 
-	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) {
+	if((ret = connect(sockid, (struct sockaddr*)&addr, sizeof(addr)) ) < 0) 
+	{
 		close( sockid );
 		log_error("bind failed, ret:%d errno %d, %s ", ret, errno, strerror( errno ) );
 		return -errno;
@@ -148,16 +160,20 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, i
 	return ret;
 }
 
-int IOUtils :: tcpSendData(int fd, char*data, int len){
+int IOUtils :: tcpSendData(int fd, char*data, int len)
+{
 	int sendLen = len, iRet = 0;
 	if(len<= MAX_MTU)
 		iRet += send(fd, data, len,0);
-	else {
-		while(sendLen>0){
+	else 
+	{
+		while(sendLen>0)
+		{
 			if(sendLen<=MAX_MTU)
 		     		iRet += send(fd, data+len-sendLen, sendLen,0);
 			else  	
 				iRet += send(fd, data+len-sendLen, MAX_MTU,0);
+
 			sendLen -= MAX_MTU;
 		}
 	}
