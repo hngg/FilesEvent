@@ -12,16 +12,18 @@ class BufferCache;
 class TaskFileSend :public TaskBase 
 {
 	public:
-		TaskFileSend( Session*sess, Sockid_t& sid, char*filename, char*saveFile );
-		virtual ~TaskFileSend();
+		TaskFileSend(Session* sess, Sockid_t& sid);
+		~TaskFileSend();
 
-		virtual int setHeartCount();
-		virtual int readBuffer();
-		virtual int writeBuffer();
+		//abstract function
+		int setFetchFile(const char* filepath);
+		int setHeartCount();
+		int readBuffer();
+		int writeBuffer();
 
 	private:
 		int tcpSendData();
-		int sendEx(char*data,int len);
+		int sendEx(char* data, int len);
 		int recvPackData();
 		int pushSendCmd(int iVal, int index=0);
 

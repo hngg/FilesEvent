@@ -30,14 +30,14 @@
 /**
  * files receive session
  */
-Session :: Session( Sockid_t sid, short type, char*remoteFile, char*saveFile)
-			:mHeadLenConst(sizeof(NET_HEAD))
-			,mSid(sid)
-			,mTaskBase(NULL)
-			,mArg(NULL)
-			,mTotalDataLen(0)
-			,mHasRecvLen(0)
-			,mbRecvHead(true)
+Session :: Session( Sockid_t sid, short type)
+		:mHeadLenConst(sizeof(NET_HEAD))
+		,mSid(sid)
+		,mTaskBase(NULL)
+		,mArg(NULL)
+		,mTotalDataLen(0)
+		,mHasRecvLen(0)
+		,mbRecvHead(true)
 {
 	mReadEvent  = (struct event*)malloc( sizeof( struct event ) );
 	mWriteEvent = (struct event*)malloc( sizeof( struct event ) );
@@ -53,7 +53,7 @@ Session :: Session( Sockid_t sid, short type, char*remoteFile, char*saveFile)
 			break;
 
 		case FILE_RECV_MSG:
-				mTaskBase = new TaskFileRecv( this, mSid, remoteFile, saveFile );
+				mTaskBase = new TaskFileRecv(this, mSid);
 			break;
 	}
 }
@@ -96,6 +96,14 @@ Session :: ~Session()
 	}
 
 	close(mSid.sid);
+}
+
+int Session :: fetchFileAndSave(const char* remoteFile, const char* saveFile)
+{
+	if(mTaskBase)
+		return mTaskBase->setFetchAndSaveFile(remoteFile, saveFile);
+
+	return 0;
 }
 
 int Session :: setHeartBeat() 
@@ -165,40 +173,40 @@ int Session :: writeBuffer()
 	return ret;
 }
 
-//session brooder 
+//session brooder(session zygote)
 int Session ::recvPackData() 
 {
 	int ret = recv(mSid.sid, mReadBuff+mHeadLenConst+mHasRecvLen, mTotalDataLen-mHasRecvLen, 0);
-	if(ret>0) 
+	if( ret > 0 )
 	{
 		mHasRecvLen += ret;
 		if(mHasRecvLen==mTotalDataLen) 
 		{
 		    int lValueLen, dataType=-1;
-		    char acValue[256] = {0};	//new char[256];
-		    memset(acValue,0, 256);
+		    char fetchPath[256] = {0};	//new char[256];
+		    memset(fetchPath,0, 256);
 			LPNET_CMD pCmdbuf = (LPNET_CMD)mReadBuff;
-		    PROTO_GetValueByName(mReadBuff, (char*)"play path", acValue, &lValueLen);
+		    PROTO_GetValueByName(mReadBuff, (char*)"play path", fetchPath, &lValueLen);
 		    if(lValueLen>0)
 		    	dataType 	= 0;
 		    else 
 			{
-		    	PROTO_GetValueByName(mReadBuff, (char*)"get path", acValue, &lValueLen);
+		    	PROTO_GetValueByName(mReadBuff, (char*)"get path", fetchPath, &lValueLen);
 		    	if(lValueLen>0)
 		    		dataType = 1;
 		    	else
 		    	{
-			    	PROTO_GetValueByName(mReadBuff, (char*)"play real", acValue, &lValueLen);
+			    	PROTO_GetValueByName(mReadBuff, (char*)"play real", fetchPath, &lValueLen);
 			    	if(lValueLen>0)
 			    		dataType = 2;
 		    	}
 		    }
 
-		    log_info("filename:%s cmd:%d dataType:%d\n", acValue, pCmdbuf->dwCmd, dataType);
+		    log_info("filename:%s cmd:%d dataType:%d\n", fetchPath, pCmdbuf->dwCmd, dataType);
 
-		    if(access(acValue, F_OK)!=0) 
+		    if(access(fetchPath, F_OK)!=0) 
 			{
-		    	log_error("filename %s is no exist.\n",acValue);
+		    	log_error("filename %s is no exist.\n", fetchPath);
 		    	return 0;
 		    }
 
@@ -209,7 +217,8 @@ int Session ::recvPackData()
 					break;
 
 				case 1:
-					mTaskBase = new TaskFileSend( this, mSid, acValue, NULL );
+					mTaskBase = new TaskFileSend(this, mSid);
+					mTaskBase->setFetchFile(fetchPath);
 					break;
 
 				case 2:
@@ -222,7 +231,6 @@ int Session ::recvPackData()
 			mHasRecvLen   = 0;
 			mbRecvHead    = true;
 
-			//SAFE_DELETE(acValue);
 			//GLOGE("Session flag:%08x frameLen:%d ret:%d", pCmdbuf->dwFlag, pCmdbuf->dwLength, ret);
 			//GLOGE("Session flag:%08x ret:%d data:%s", pCmdbuf->dwFlag, ret, pCmdbuf->lpData);
 		}
@@ -251,7 +259,7 @@ void Session :: addEvent( Session * session, short events, int fd, void (*callba
 	{
 		session->setWriting( 1 );
 
-		struct event*pEvent=session->getWriteEvent();
+		struct event* pEvent=session->getWriteEvent();
 
 		if( fd < 0 ) 
 			fd = EVENT_FD( pEvent );
@@ -273,7 +281,7 @@ void Session :: addEvent( Session * session, short events, int fd, void (*callba
 		if( fd < 0 ) 
 			fd = EVENT_FD( session->getWriteEvent() );
 
-		struct event*pEvent=session->getReadEvent();
+		struct event* pEvent=session->getReadEvent();
 		event_set( pEvent, fd, events, callback, session );
 		event_base_set( eventArg->getEventBase(), pEvent );
 
@@ -325,6 +333,7 @@ int Session :: addTimerEvent()
 	timeout.tv_sec 	= 0;
 	timeout.tv_usec = TIMEOUT_US;
 	evtimer_add( getTimeEvent(), &timeout );
+
 	return 0;
 }
 

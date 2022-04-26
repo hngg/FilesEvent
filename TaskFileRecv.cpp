@@ -12,16 +12,6 @@
 #include "BaseUtils.h"
 
 
-enum FILE_RECV_STATUS
-{
-	RECV_TELL_TOTAL_LENGTH = 1,	//file total length
-	RECV_TELL_READ_LENGTH,		//current recv length
-	RECV_TELL_END,				//file recv end
-	RECV_TELL_SAVE_DONE,		//file save done
-	RECV_TELL_USE_TIME			//file recv use time
-};
-
-
 #ifdef 	__ANDROID__
 #define	FILE_PATH	"/sdcard/w.h264"
 #else
@@ -29,23 +19,24 @@ enum FILE_RECV_STATUS
 #endif
 
 
-	TaskFileRecv::TaskFileRecv( Session* sess, Sockid_t& sid, char* remoteFile, char* saveFile )
+	TaskFileRecv::TaskFileRecv(Session* sess, Sockid_t& sid)
 				:mPackHeadLen(sizeof(NET_CMD))
-				,TaskBase(sess, sid, remoteFile, saveFile)
+				,TaskBase(sess, sid)
 				,mSess(sess)
+				,mwFile(NULL)
 				,mRecvDataLen(0)
 				,mTotalLen(0)
 	{
 		mRecvBuffer.reset();
 		mRecvBuffer.createMem(FILE_MEMORY_LEN+sizeof(NET_CMD));
 
-		mwFile = fopen(saveFile, "w");
+		// mwFile = fopen(saveFile, "w");
 
-		char lpData[2048];
-		int nLength = sprintf(lpData, "<get path=\"%s\"/>", remoteFile);
+		// char lpData[2048];
+		// int nLength = sprintf(lpData, "<get path=\"%s\"/>", remoteFile);
 
-		if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
-			log_error("send CMD err:%s", lpData);
+		// if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
+		// 	log_error("send CMD err:%s", lpData);
 	}
 
 	TaskFileRecv::~TaskFileRecv() 
@@ -53,9 +44,28 @@ enum FILE_RECV_STATUS
 		log_info("file seek:%ld", ftell(mwFile));
 
 		if(mwFile != NULL)
+		{
 			fclose(mwFile);
-
+			mwFile = NULL;
+		}
+			
 		mRecvBuffer.releaseMem();
+	}
+
+	int TaskFileRecv::setFetchAndSaveFile(const char* remotefile, const char* savefile)
+	{
+		if(NULL == mwFile)
+		{
+			mwFile = fopen(savefile, "w");
+
+			char lpData[2048];
+			int nLength = sprintf(lpData, "<get path=\"%s\"/>", remotefile);
+
+			if(SendCmd(MODULE_MSG_LOGIN, 0, lpData, nLength)<0)
+				log_error("send CMD err:%s", lpData);
+		}
+
+		return 0;
 	}
 
 	int TaskFileRecv::sendEx(void*data, int len) 

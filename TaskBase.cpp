@@ -1,21 +1,7 @@
 #include "TaskBase.h"
 
 
-	// TaskBase::TaskBase( Sockid_t sid )
-	// 		:mSid(sid)
-	// 		,mHeartCount(0)
-	// {
-
-	// }
-
-	// TaskBase::TaskBase( Sockid_t &sid, char*filename)
-	// 		:mSid(sid)
-	// 		,mHeartCount(0)
-	// {
-
-	// }
-
-	TaskBase::TaskBase(  Session* sess, Sockid_t& sid, char* filename, char*saveFile)
+	TaskBase::TaskBase(Session* sess, Sockid_t& sid)
 			:mSid(sid)
 			,mHeartCount(0)
 	{
@@ -24,6 +10,16 @@
 
 	TaskBase::~TaskBase() {
 
+	}
+
+	int TaskBase::setFetchFile(const char* filepath)
+	{
+		return 0;
+	}
+
+	int TaskBase::setFetchAndSaveFile(const char* fetchfile, const char* savefile)
+	{
+		return 0;
 	}
 
 	int TaskBase::setHeartCount() {

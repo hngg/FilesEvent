@@ -12,12 +12,13 @@ class BufferCache;
 class TaskFileRecv :public TaskBase 
 {
 	public:
-		// TaskFileRecv( Session*sess, Sockid_t &sid );
-		// TaskFileRecv( Session*sess, Sockid_t &sid, char*remoteFile );
-		TaskFileRecv( Session* sess, Sockid_t& sid, char* remoteFile, char* saveFile );
-		virtual ~TaskFileRecv();
-		virtual int readBuffer();
-		virtual int writeBuffer();
+		TaskFileRecv(Session* sess, Sockid_t& sid);
+		~TaskFileRecv();
+
+		//abstract function
+		int setFetchAndSaveFile(const char* remotefile, const char* savefile);
+		int readBuffer();
+		int writeBuffer();
 
 	private:
 		int sendEx(void*data, int len);

@@ -17,133 +17,155 @@ ReactorStation 	mStatiion;
 TcpClient	 	*mpClient		= NULL;
 TcpServer	 	*mpServer		= NULL;
 
+#define SUCCESS 1
+#define FAILED -1
 
 /////////////////////////////////////////////////////Server and real view////////////////////////////////////////////////////////
 
-static jboolean StartNetWork(JNIEnv *env, jobject) 
+static int StartNetWork(JNIEnv *env, jobject) 
 {
 	if(mStatiion.isStartup() == 0) 
 	{
 		log_warn("______startup begin.");
 		mStatiion.startup();
-		return true;
+		return SUCCESS;
 	}
 	else
 	{
 		log_error("___reactor station is running.");
 	}
 	
-	return false;
+	return FAILED;
 }
 
-static jboolean StopNetWork(JNIEnv *env, jobject) 
+static int StopNetWork(JNIEnv *env, jobject) 
 {
 	if(mStatiion.isStartup() == 1) 
 	{
 		mStatiion.shutdown();
 		log_warn("______shutdown done.");
-		return true;
+		return SUCCESS;
 	}
 	else
 	{
 		log_error("___reactor station is not running.");
 	}
-	return false;
+
+	return FAILED;
 }
 
-static jboolean StartServer(JNIEnv *env, jobject obj, jstring localip, jint destport)
+static int StartServer(JNIEnv *env, jobject obj, jstring localip, jint destport)
 {
-	if(mpServer==NULL) 
+	g_mClass = (jclass)env->NewGlobalRef(obj);
+
+	if(mpServer==NULL)
 	{
 		jboolean isOk = JNI_FALSE;
 		const char*ip = env->GetStringUTFChars(localip, &isOk);
 
 		mpServer = new TcpServer(ip, destport);
-		mpServer->registerEvent(mStatiion.getEventGlobal());
+		int rest = mpServer->registerEvent(mStatiion.getEventGlobal());
 
 		env->ReleaseStringUTFChars(localip, ip);
+		
+		return rest;
 	}
 
-	g_mClass = (jclass)env->NewGlobalRef(obj);
-
-	return true;
+	return FAILED;
 }
 
-static jboolean StopServer(JNIEnv *env, jobject)
+static int StopServer(JNIEnv *env, jobject)
 {
 	if(mpServer!=NULL) 
 	{
 		mpServer->shutdown();
 		delete mpServer;
 		mpServer = NULL;
+
+		return SUCCESS;
 	}
-	return true;
+	
+	return FAILED;
 }
 
 
 ////////////////////////////////////////////client/////////////////////////////////////////////////////
 
-static jboolean StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint destport, jstring remoteFile, jstring saveFile)	//ip port remotefile savefile
+static int StartFileRecv(JNIEnv *env, jobject obj, jstring destip, jint destport)	//ip port remotefile savefile
 {
 	int ret = 0;
 	g_mClass = (jclass)env->NewGlobalRef(obj);
 	if(NULL == mpClient)
 	{
 		jboolean isOk = JNI_FALSE;
-		const char*rfile 	= env->GetStringUTFChars(remoteFile, &isOk);
-		const char*sfile 	= env->GetStringUTFChars(saveFile, &isOk);
 		const char*chaip 	= env->GetStringUTFChars(destip, &isOk);
 		mpClient = new TcpClient();
-		ret = mpClient->connect( chaip, destport, rfile, sfile );
+		ret = mpClient->connect(chaip, destport);
 		if(ret < 0) 
 		{
 			delete mpClient;
 			mpClient = NULL;
 			log_error("connect ip:%s port:%d failed.", chaip, destport);
-			return false;
+
+			return FAILED;
 		}
 
 		mpClient->registerEvent(mStatiion.getEventGlobal());
 
-		env->ReleaseStringUTFChars(remoteFile, rfile);
-		env->ReleaseStringUTFChars(saveFile, sfile);
 		env->ReleaseStringUTFChars(destip, chaip);
 
-		return true;
+		return SUCCESS;
 	}
-	return false;
+
+	return FAILED;
 }
 
-static jboolean StopFileRecv(JNIEnv *env, jobject)
+static int StopFileRecv(JNIEnv *env, jobject)
 {
 	if(mpClient)
 	{
 		mpClient->disConnect();
 		delete mpClient;
 		mpClient = NULL;
+
+		return SUCCESS;
 	}
-	return true;
+
+	return FAILED;
 }
 
-static jboolean FetchAndSaveFile(JNIEnv *env, jobject, int key, jstring remoteFile, jstring saveFile)
+static int FetchAndSaveFile(JNIEnv *env, jobject, int key, jstring remoteFile, jstring saveFile)
 {
-	return true;
+	if(mpClient) 
+	{
+		jboolean isOk = JNI_FALSE;
+		const char* rfile 	= env->GetStringUTFChars(remoteFile, &isOk);
+		const char* sfile 	= env->GetStringUTFChars(saveFile, &isOk);
+		mpClient->fetchAndSaveFile(0, rfile, sfile);
+		env->ReleaseStringUTFChars(remoteFile, rfile);
+		env->ReleaseStringUTFChars(saveFile, sfile);
+
+		return SUCCESS;
+	}
+
+	return FAILED;
 }
 
-static jboolean CancelFetchingFile(JNIEnv *env, jobject, int key)
+static int CancelFetchingFile(JNIEnv *env, jobject, int key)
 {
-	return true;
+	return SUCCESS;
 }
 
 static JNINativeMethod video_method_table[] = {
 
-	{"StartNetWork", "()Z", (void*)StartNetWork },
-	{"StopNetWork", "()Z", (void*)StopNetWork },
-	{"StartServer", "(Ljava/lang/String;I)Z", (void*)StartServer },
-	{"StopServer", "()Z", (void*)StopServer },
+	{"StartNetWork", "()I", (void*)StartNetWork },
+	{"StopNetWork", "()I", (void*)StopNetWork },
+	{"StartServer", "(Ljava/lang/String;I)I", (void*)StartServer },
+	{"StopServer", "()I", (void*)StopServer },
 
-	{"StartFileRecv", "(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)Z", (void*)StartFileRecv },
-	{"StopFileRecv", "()Z", (void*)StopFileRecv },
+	{"StartFileRecv", "(Ljava/lang/String;I)I", (void*)StartFileRecv },
+	{"FetchAndSaveFile", "(ILjava/lang/String;Ljava/lang/String;)I", (void*)FetchAndSaveFile },
+	{"StopFileRecv", "()I", (void*)StopFileRecv },
 };
 
 int registerNativeMethods(JNIEnv* env, const char* className, JNINativeMethod* methods, int numMethods)

@@ -14,11 +14,11 @@
 class TcpClient 
 {
 	public:
-		TcpClient( );
+		TcpClient();
 		virtual ~TcpClient();
 
 		// int connect(const char* destIp, unsigned short destPort, const char*filepath, void *surface); //get h264 show
-		int connect(const char* destIp, unsigned short destPort, const char* remoteFile, const char* saveFile);
+		int connect(const char* destIp, unsigned short destPort);
 		int disConnect();
 		int registerEvent(EventGlobal* evglobal);
 

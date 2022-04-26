@@ -582,7 +582,7 @@ int event_del(struct event *ev)
 	void *evbase;
 
 	event_debug("event_del: %p, callback %p",
-		 ev, ev->ev_callback);
+		ev, ev->ev_callback);
 
 	/* An event without a base has not been added */
 	if (ev->ev_base == NULL)
@@ -668,7 +668,7 @@ int timeout_next(struct event_base *base, struct timeval *tv)
 	assert(tv->tv_usec >= 0);
 
 	event_debug("timeout_next: in %ld seconds", tv->tv_sec);
-	
+
 	return (0);
 }
 

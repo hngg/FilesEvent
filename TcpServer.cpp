@@ -56,11 +56,8 @@ int TcpServer :: registerEvent(EventGlobal* evglobal)
 
 		event_set( mEvAccept, mListenFD, EV_READ|EV_PERSIST, TcpServer::onAccept, evglobal );
 		event_base_set( evglobal->getEventBase(), mEvAccept );	//set event_base to event
-		struct timeval timeout;
-		memset( &timeout, 0, sizeof( timeout ) );
-		timeout.tv_sec  = evglobal->getTimeout()/1000;
-		timeout.tv_usec = (evglobal->getTimeout()%1000)*1000;
 		event_add( mEvAccept, NULL );
+
 		log_warn("event_add accept event time:%d", evglobal->getTimeout());
 	}
 
@@ -91,7 +88,7 @@ void TcpServer :: onAccept( int listenFd, short events, void * arg )
 	struct sockaddr_in clientAddr;
 	socklen_t clientLen = sizeof( clientAddr );
 	
-	EventGlobal * eventArg = (EventGlobal*)arg;
+	EventGlobal* eventArg = (EventGlobal*)arg;
 	if(!eventArg)
 		return ;
 
@@ -118,7 +115,7 @@ void TcpServer :: onAccept( int listenFd, short events, void * arg )
 	IOUtils::inetNtoa( &( clientAddr.sin_addr ), clientIP, sizeof( clientIP ) );
 	log_warn( "clientIP: %s clientFD:%d",clientIP, clientFD);
 
-	Session * session = new Session( sid, FILE_SEND_MSG, NULL, NULL );
+	Session* session = new Session(sid, FILE_SEND_MSG);
 	if( NULL != session ) 
 	{
 		eventArg->getSessionManager()->put( sid.sid, session, &sid.seq );

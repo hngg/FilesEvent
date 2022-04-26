@@ -19,7 +19,7 @@ TcpClient :: ~TcpClient()
 	log_warn("~TcpClient destroy");
 }
 
-int TcpClient :: connect(const char* destIp, unsigned short destPort, const char*remoteFile, const char*saveFile) 
+int TcpClient :: connect(const char* destIp, unsigned short destPort) 
 {
 	int ret = IOUtils::tcpConnect(destIp, destPort, &mSockId, 0);
 	log_warn("connect ret:%d sockid:%d.",ret, mSockId);
@@ -28,7 +28,7 @@ int TcpClient :: connect(const char* destIp, unsigned short destPort, const char
 		Sockid_t mSid;
 		mSid.sid = mSockId;
 		IOUtils::setBlock( mSockId, 0 );
-		mSession = new Session( mSid, FILE_RECV_MSG, (char*)remoteFile, (char*)saveFile );
+		mSession = new Session( mSid, FILE_RECV_MSG);
 	}
 	
 	return ret;
@@ -84,6 +84,9 @@ int TcpClient :: registerEvent(EventGlobal* evglobal)
 
 int TcpClient :: fetchAndSaveFile(int key, const char* remoteFile, const char* saveFile)
 {
+	if(mSession)
+		return mSession->fetchFileAndSave(remoteFile, saveFile);
+		
 	return 0;
 }
 

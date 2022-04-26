@@ -15,10 +15,11 @@
 #include "BufferCache.h"
 
 
-	TaskFileSend::TaskFileSend( Session* sess, Sockid_t& sid, char* filename, char* saveFile )
+	TaskFileSend::TaskFileSend(Session* sess, Sockid_t& sid)
 				:mPackHeadLen(sizeof(NET_CMD))
-				,TaskBase(sess, sid, filename, saveFile)
+				,TaskBase(sess, sid)
 				,mSess(sess)
+				,mpFile(NULL)
 				,mRecvDataLen(0)
 				,mRecvHeadLen(0)
 				,mFileLen(0)
@@ -30,10 +31,35 @@
 		mSendBuffer.reset();
 
 		mInBuffer = new BufferCache();
+	}
 
-		mpFile = fopen(filename, "rb");
+	TaskFileSend::~TaskFileSend() 
+	{
+		if(mInBuffer)
+		{
+			delete mInBuffer;
+			mInBuffer = NULL;
+		}
+
+		if(mpFile) 
+		{
+			fclose(mpFile);
+			mpFile = NULL;
+		}
+			
+		mMsgQueue.clearQueue();
+		mSendBuffer.releaseMem();
+	}
+
+	int TaskFileSend::setFetchFile(const char* filepath)
+	{
+		int rest = -1;
+		if(mpFile)
+			return rest;
+
+		mpFile = fopen(filepath, "rb");
 	    struct stat buf;
-	    stat(filename, &buf);
+	    stat(filepath, &buf);
 	    mFileLen = buf.st_size;
 //		fseek( mpFile, 0, SEEK_END );
 //		mFileLen = ftell( mpFile );
@@ -59,28 +85,14 @@
 		mSendBuffer.bProcCmmd 	= true;
 		int ret = tcpSendData();
 
-		log_warn("file %s len:%u", filename, mFileLen);//get_filesize(filename)
-	}
+		log_warn("filepath %s len:%u", filepath, mFileLen);		//get_filesize(filename)
 
-	TaskFileSend::~TaskFileSend() 
-	{
-		delete mInBuffer;
-		mInBuffer = NULL;
-
-		if(mpFile != NULL) 
-		{
-			fclose(mpFile);
-			mpFile = NULL;
-		}
-			
-
-		mMsgQueue.clearQueue();
-		mSendBuffer.releaseMem();
+		return 0;
 	}
 
 	int TaskFileSend::sendVariedCmd(int iVal) 
 	{
-		LPNET_CMD	pCmd = (LPNET_CMD)mSendBuffer.cmmd;
+		LPNET_CMD  pCmd = (LPNET_CMD)mSendBuffer.cmmd;
 		pCmd->dwFlag 	= NET_FLAG;
 		pCmd->dwCmd 	= iVal;
 		pCmd->dwIndex 	= 0;
@@ -134,7 +146,11 @@
 				mFrameCount++;
 				log_info("fread data len:%d mHasReadLen:%d cmd mFrameCount:%d", mSendBuffer.dataLen, mHasReadLen, mFrameCount);
 			}
-			else{
+			else
+			{
+				#ifdef __ANDROID__
+					FileRecvCallback(0, SEND_TELL_FILE_END, mFileLen);
+				#endif
 				ret = pushSendCmd(MODULE_MSG_DATAEND);
 				return OWN_SOCK_EXIT;
 			}
@@ -158,7 +174,7 @@
 		return 0;
 	}
 
-	int TaskFileSend::sendEx(char*data, int len) 
+	int TaskFileSend::sendEx(char* data, int len) 
 	{
 		int leftLen = len, iRet = 0;
 

@@ -10,22 +10,26 @@ class Session
 {
 	public:
 		// Session( Sockid_t sid, short type, char*filepath, void*surface); //get h264 show
-		Session( Sockid_t sid, short type, char*remoteFile, char*saveFile);
+		Session(Sockid_t sid, short type);
 		virtual ~Session();
 
 		int addReadEvent();
 		int addWriteEvent();
 		int addTimerEvent();
-		struct event * getReadEvent();	
-		struct event * getWriteEvent();
-		struct event * getTimeEvent();
+		struct event* getReadEvent();	
+		struct event* getWriteEvent();
+		struct event* getTimeEvent();
 
-		void setGlobal( void * arg );
-		void * getGlobal();
+		void setGlobal( void* arg );
+		void* getGlobal();
 
 		Sockid_t getSid();
 
+		//for client recv file and save
+		int fetchFileAndSave(const char* remoteFile, const char* saveFile);
+
 		enum { eNormal, eWouldExit, eExit };
+	
 		void setStatus( int status );
 		int  getStatus();
 
@@ -43,27 +47,28 @@ class Session
 		int getWriting();
 		void setWriting( int writing );
 
-		static void onRead( int fd, short events, void * arg );
-		static void onWrite( int fd, short events, void * arg );
-		static void onTimer( int fd, short events, void * arg );
+		static void onRead( int fd, short events,  void* arg );
+		static void onWrite( int fd, short events, void* arg );
+		static void onTimer( int fd, short events, void* arg );
 
-		static void addEvent( Session * session, short events, int fd);
-		static void addEvent( Session * session, short events, int fd , void (*callback)(int, short, void *));
+		static void addEvent( Session* session, short events, int fd);
+		static void addEvent( Session* session, short events, int fd , void (*callback)(int, short, void*));
 		
 	private:
-		Session( Session & );
-		Session & operator=( Session & );
-		int recvEx(char*pData, int len);
-		int recvPackData();
+		Session( Session& );
+		Session& operator=( Session& );
+		int recvEx(char* pData, int len);
 
-		Sockid_t mSid;
-		TaskBase *mTaskBase;
+		int recvPackData();//session brooder(session zygote)
 
-		struct event * mReadEvent;
-		struct event * mWriteEvent;
-		struct event * mTimeEvent;
+		Sockid_t  mSid;
+		TaskBase* mTaskBase;
 
-		void * mArg;
+		struct event* mReadEvent;
+		struct event* mWriteEvent;
+		struct event* mTimeEvent;
+
+		void* mArg;
 
 		char mStatus;
 		char mRunning;
@@ -88,16 +93,16 @@ class SessionManager
 		SessionManager();
 		~SessionManager();
 
-		void setRealView(int sockId, void*surface);
+		void setRealView(int sockId, void* surface);
 
 		int getCount();
-		void put( uint16_t key, Session * session, uint16_t * seq );
-		Session * get( uint16_t key, uint16_t * seq );
-		Session * getAndRemove( uint16_t key, uint16_t * seq = NULL );
+		void put( uint16_t key, Session* session, uint16_t* seq );
+		Session* get( uint16_t key, uint16_t* seq );
+		Session* getAndRemove( uint16_t key, uint16_t* seq = NULL );
 
 	private:
 		int mCount;
-		SessionEntry_t * mArray[ 64 ];
+		SessionEntry_t* mArray[64];
 };
 
 #endif

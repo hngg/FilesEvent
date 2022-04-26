@@ -15,7 +15,7 @@
 
 #define  MAX_MTU 1400
 
-void IOUtils :: inetNtoa( in_addr * addr, char * ip, int size )
+void IOUtils :: inetNtoa( in_addr* addr, char* ip, int size )
 {
 	#if defined (linux) || defined (__ANDROID__) || defined (__sgi) || defined (__hpux) || defined (__FreeBSD__)
 		const unsigned char *p = ( const unsigned char *) addr;
@@ -54,12 +54,13 @@ int IOUtils :: setBlock( int fd, int blocking)
 	return 0;
 }
 
-//0 nonblock, 1 block
-int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int tcpdelay )
+/**
+ * 0 nonblock, 1 block
+ * return success: bindPort, failed: <0
+ */
+int IOUtils :: tcpListen( const char* ip, int bindPort, int* outListenId, int tcpdelay )
 {
-	int ret = 0;
-
-	int listenFd = socket( AF_INET, SOCK_STREAM, 0 );
+	int listenFd = socket(AF_INET, SOCK_STREAM, 0);
 	if( listenFd < 0 ) 
 	{
 		log_error("listen failed, errno %d, %s", errno, strerror( errno ) );
@@ -118,10 +119,10 @@ int IOUtils :: tcpListen( const char * ip, int bindPort, int * outListenId, int 
 	*outListenId = listenFd;
 	log_info("Listen on port [%d]", bindPort );
 
-	return ret;
+	return bindPort;
 }
 
-int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, int tcpdelay)
+int IOUtils :: tcpConnect(const char* destip, int destport, int* outConnectId, int tcpdelay)
 {
 	int ret = 0;
 	int sockid = socket(AF_INET, SOCK_STREAM, 0);
@@ -160,7 +161,7 @@ int IOUtils :: tcpConnect(const char *destip, int destport, int *outConnectId, i
 	return ret;
 }
 
-int IOUtils :: tcpSendData(int fd, char*data, int len)
+int IOUtils :: tcpSendData(int fd, char* data, int len)
 {
 	int sendLen = len, iRet = 0;
 	if(len<= MAX_MTU)
@@ -184,7 +185,7 @@ void setPortReuse(int listener)
 {
 	  /*设置socket属性，端口可以重用*/
    int opt=SO_REUSEADDR;
-   setsockopt(listener,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
+   setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 
 
